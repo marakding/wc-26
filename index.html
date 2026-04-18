@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WC26">
+<meta name="description" content="FIFA World Cup 2026 Companion App">
+<title>⚽ WC26 — World Cup Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getDatabase, ref, set, get, onValue, push, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+  window.__firebaseModules = { initializeApp, getDatabase, ref, set, get, onValue, push, update };
+</script>
+<style>
+  :root {
+    --bg: #06090f;
+    --bg2: #0d1424;
+    --bg3: #131d35;
+    --card: #111827;
+    --card2: #1a2540;
+    --border: rgba(255,255,255,0.07);
+    --gold: #f5c518;
+    --gold2: #e8a800;
+    --green: #00e676;
+    --red: #ff3d57;
+    --blue: #3d8bff;
+    --text: #f0f4ff;
+    --muted: #6b7fa3;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root { min-height: 100dvh; display: flex; flex-direction: column; }
+
+  /* ── TOP NAV ── */
+  .top-nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(6,9,15,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: calc(var(--safe-top) + 10px) 16px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .top-nav .logo {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .top-nav .logo span { color: var(--text); }
+  .username-badge {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .username-badge.set { color: var(--gold); border-color: rgba(245,197,24,0.3); }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(6,9,15,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 calc(var(--safe-bottom) + 8px);
+    display: flex;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; padding: 4px 0; color: var(--muted);
+    transition: color 0.2s; font-size: 11px; font-weight: 500;
+    border: none; background: none;
+  }
+  .nav-item.active { color: var(--gold); }
+  .nav-item svg { width: 22px; height: 22px; }
+
+  /* ── CONTENT ── */
+  .content {
+    flex: 1;
+    padding: 16px 16px calc(80px + var(--safe-bottom));
+    max-width: 600px; margin: 0 auto; width: 100%;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 20px; letter-spacing: 1px;
+    color: var(--text);
+  }
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 3px 8px;
+    border-radius: 20px; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-live { background: rgba(255,61,87,0.2); color: var(--red); border: 1px solid rgba(255,61,87,0.3); }
+  .badge-gold { background: rgba(245,197,24,0.15); color: var(--gold); border: 1px solid rgba(245,197,24,0.3); }
+  .badge-blue { background: rgba(61,139,255,0.15); color: var(--blue); border: 1px solid rgba(61,139,255,0.3); }
+
+  /* ── MATCH CARD ── */
+  .match-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .match-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(245,197,24,0.03), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .match-card:hover::before, .match-card.active-match::before { opacity: 1; }
+  .match-card.active-match { border-color: rgba(255,61,87,0.4); }
+  .match-card:active { transform: scale(0.98); }
+
+  .match-teams {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .team-side {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+  }
+  .team-side.right { flex-direction: row-reverse; text-align: right; }
+  .team-flag { font-size: 26px; }
+  .team-name { font-family: var(--font-display); font-size: 17px; letter-spacing: 0.5px; }
+  .match-score {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-display); font-size: 28px;
+    color: var(--text); min-width: 70px; justify-content: center;
+  }
+  .score-sep { color: var(--muted); font-size: 22px; }
+  .match-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted);
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 6px var(--red);
+    animation: pulse 1.5s infinite;
+    display: inline-block; margin-right: 5px;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ── STATS BAR ── */
+  .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .stat-label { font-size: 11px; color: var(--muted); width: 90px; text-align: right; }
+  .stat-label.right { text-align: left; }
+  .stat-bar-wrap { flex: 1; display: flex; gap: 3px; height: 6px; border-radius: 3px; overflow: hidden; background: var(--bg3); }
+  .stat-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .stat-bar.home { background: var(--gold); margin-left: auto; border-radius: 3px 0 0 3px; }
+  .stat-bar.away { background: var(--blue); border-radius: 0 3px 3px 0; }
+  .stat-val { font-size: 12px; font-weight: 600; width: 30px; text-align: center; }
+
+  /* ── STANDINGS ── */
+  .standings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .standings-table th { color: var(--muted); font-weight: 500; font-size: 11px; padding: 4px 6px; text-align: center; }
+  .standings-table th:first-child { text-align: left; }
+  .standings-table td { padding: 8px 6px; text-align: center; border-top: 1px solid var(--border); }
+  .standings-table td:first-child { text-align: left; }
+  .standings-table tr.qualify { }
+  .standings-table tr.qualify td:first-child { border-left: 2px solid var(--green); padding-left: 8px; }
+  .standings-table tr.maybe td:first-child { border-left: 2px solid var(--gold); padding-left: 8px; }
+  .team-cell { display: flex; align-items: center; gap: 7px; }
+  .form-dots { display: flex; gap: 3px; }
+  .form-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .form-dot.W { background: var(--green); }
+  .form-dot.D { background: var(--gold); }
+  .form-dot.L { background: var(--red); }
+  .pts { font-weight: 700; color: var(--text); }
+
+  /* ── PREDICTION ── */
+  .pred-match {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .pred-teams-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .pred-team { text-align: center; }
+  .pred-flag { font-size: 32px; display: block; margin-bottom: 4px; }
+  .pred-name { font-family: var(--font-display); font-size: 16px; }
+  .score-inputs { display: flex; align-items: center; gap: 8px; }
+  .score-input {
+    width: 50px; height: 50px;
+    background: var(--bg3);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 28px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .score-input:focus { border-color: var(--gold); }
+  .score-input::-webkit-inner-spin-button,
+  .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .score-vsep { color: var(--muted); font-size: 20px; }
+  .btn {
+    border: none; border-radius: 10px; cursor: pointer;
+    font-family: var(--font-body); font-weight: 600; font-size: 14px;
+    padding: 10px 20px; transition: all 0.2s;
+  }
+  .btn-gold { background: var(--gold); color: #000; }
+  .btn-gold:hover { background: var(--gold2); }
+  .btn-gold:active { transform: scale(0.96); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
+  .btn-full { width: 100%; text-align: center; }
+  .pred-locked {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(245,197,24,0.08);
+    border: 1px solid rgba(245,197,24,0.2);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 14px;
+  }
+  .pred-locked .locked-score { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
+  .pred-result {
+    font-weight: 700; font-size: 13px;
+  }
+  .pred-result.correct { color: var(--green); }
+  .pred-result.partial { color: var(--gold); }
+  .pred-result.wrong { color: var(--red); }
+
+  /* ── POLL ── */
+  .poll-option {
+    position: relative; overflow: hidden;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .poll-option.voted { border-color: var(--gold); cursor: default; }
+  .poll-option.voted.winner { border-color: var(--green); }
+  .poll-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(245,197,24,0.1);
+    transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+    border-radius: 10px;
+  }
+  .poll-fill.winner { background: rgba(0,230,118,0.1); }
+  .poll-text { position: relative; z-index: 1; font-weight: 500; font-size: 14px; }
+  .poll-pct { position: relative; z-index: 1; font-weight: 700; font-size: 14px; color: var(--gold); }
+  .poll-total { text-align: center; color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  /* ── CALL IT ── */
+  .callit-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-top: 4px;
+  }
+  .callit-player {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 500;
+  }
+  .callit-player:active { transform: scale(0.97); }
+  .callit-player.called { border-color: var(--gold); background: rgba(245,197,24,0.1); color: var(--gold); }
+  .callit-player.correct { border-color: var(--green); background: rgba(0,230,118,0.1); color: var(--green); }
+  .callit-player.wrong { border-color: var(--red); opacity: 0.5; }
+  .player-num { width: 22px; height: 22px; border-radius: 50%; background: var(--card2); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* ── LEADERBOARD ── */
+  .lb-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    background: var(--bg3);
+    transition: background 0.2s;
+  }
+  .lb-row.me { background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.2); }
+  .lb-rank { font-family: var(--font-display); font-size: 20px; color: var(--muted); width: 28px; flex-shrink: 0; }
+  .lb-rank.top { color: var(--gold); }
+  .lb-name { flex: 1; font-weight: 500; }
+  .lb-pts { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
+  .lb-breakdown { font-size: 11px; color: var(--muted); }
+
+  /* ── INFO ── */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .info-tile {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+    text-align: center;
+  }
+  .info-tile .num { font-family: var(--font-display); font-size: 36px; color: var(--gold); line-height: 1; }
+  .info-tile .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .venue-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .venue-flag { font-size: 22px; }
+  .venue-name { font-weight: 600; font-size: 14px; }
+  .venue-city { font-size: 12px; color: var(--muted); }
+  .venue-cap { font-size: 12px; color: var(--blue); font-weight: 600; margin-left: auto; }
+
+  /* ── GROUP TABS ── */
+  .group-tabs {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    margin-bottom: 12px;
+  }
+  .group-tabs::-webkit-scrollbar { display: none; }
+  .group-tab {
+    flex-shrink: 0;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; color: var(--muted);
+    white-space: nowrap;
+  }
+  .group-tab.active { background: var(--gold); color: #000; border-color: var(--gold); }
+
+  /* ── SETUP / MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 100%; max-width: 400px;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .modal h2 { font-family: var(--font-display); font-size: 28px; margin-bottom: 6px; }
+  .modal p { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+  .text-input {
+    width: 100%; background: var(--bg3); border: 2px solid var(--border);
+    border-radius: 10px; color: var(--text); font-family: var(--font-body);
+    font-size: 16px; padding: 12px 14px; outline: none;
+    transition: border-color 0.2s; margin-bottom: 12px;
+  }
+  .text-input:focus { border-color: var(--gold); }
+
+  /* ── CONFIG CARD ── */
+  .config-card {
+    background: var(--card2);
+    border: 1px solid rgba(245,197,24,0.2);
+    border-radius: 14px; padding: 16px;
+    margin-bottom: 12px;
+  }
+  .config-card h3 { font-family: var(--font-display); font-size: 18px; margin-bottom: 4px; color: var(--gold); }
+  .config-card p { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+  .code-block {
+    background: var(--bg); border-radius: 8px; padding: 10px 12px;
+    font-family: monospace; font-size: 12px; color: var(--green);
+    overflow-x: auto; margin-bottom: 8px; white-space: nowrap;
+  }
+
+  /* ── TABS (match detail) ── */
+  .tabs {
+    display: flex; border-bottom: 1px solid var(--border); margin-bottom: 14px;
+  }
+  .tab {
+    padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+    color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tab.active { color: var(--gold); border-color: var(--gold); }
+
+  /* ── EVENT FEED ── */
+  .event-feed { padding: 4px 0; }
+  .event-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .event-min { color: var(--muted); font-weight: 700; font-size: 12px; width: 32px; flex-shrink: 0; }
+  .event-icon { font-size: 16px; }
+  .event-text { flex: 1; }
+  .event-text .player { font-weight: 600; }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty .big { font-size: 48px; margin-bottom: 12px; }
+  .empty h3 { font-family: var(--font-display); font-size: 22px; color: var(--text); margin-bottom: 6px; }
+  .empty p { font-size: 14px; line-height: 1.6; }
+
+  /* ── HERO BANNER ── */
+  .hero {
+    background: linear-gradient(135deg, #0d1f3c, #1a0a2e);
+    border: 1px solid var(--border);
+    border-radius: 18px; padding: 22px 20px;
+    margin-bottom: 14px; position: relative; overflow: hidden;
+    text-align: center;
+  }
+  .hero::before {
+    content: '⚽';
+    position: absolute; font-size: 120px; opacity: 0.05;
+    top: -20px; right: -20px; transform: rotate(15deg);
+    pointer-events: none;
+  }
+  .hero .eyebrow { font-size: 11px; font-weight: 600; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .hero h1 { font-family: var(--font-display); font-size: 34px; letter-spacing: 2px; line-height: 1.1; margin-bottom: 6px; }
+  .hero .sub { font-size: 13px; color: var(--muted); }
+  .hero .countdown { font-family: var(--font-display); font-size: 42px; color: var(--gold); letter-spacing: 4px; margin: 10px 0 4px; }
+  .hero .countdown-label { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* ── ROOM CODE ── */
+  .room-banner {
+    background: linear-gradient(90deg, rgba(245,197,24,0.1), rgba(61,139,255,0.08));
+    border: 1px solid rgba(245,197,24,0.2);
+    border-radius: 12px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .room-code { font-family: var(--font-display); font-size: 24px; color: var(--gold); letter-spacing: 4px; }
+  .room-label { font-size: 12px; color: var(--muted); }
+  .copy-hint { margin-left: auto; font-size: 12px; color: var(--blue); font-weight: 600; }
+
+  /* Animation */
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  .fade-in { animation: fadeIn 0.35s ease both; }
+
+  .spinner {
+    width: 28px; height: 28px; border: 2px solid var(--border);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 30px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const WORKER_URL = 'https://wc26.marakding.workers.dev';
+const FIREBASE_CONFIG = null; // Add Firebase config here later for multiplayer
+const LEAGUE_ID = 1;
+const SEASON = 2022; // Switch to 2026 when tournament starts in June
+// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+
+// ── DEMO DATA (used when API key not configured) ─────────────────────────────
+const DEMO_MATCHES = [
+  {
+    fixture: { id: 1001, date: new Date().toISOString(), status: { short: 'LIVE', elapsed: 67 }, venue: { name: 'SoFi Stadium', city: 'Los Angeles' } },
+    league: { round: 'Group A' },
+    teams: {
+      home: { id: 1, name: 'Brazil', logo: '' },
+      away: { id: 2, name: 'Argentina', logo: '' }
+    },
+    goals: { home: 2, away: 1 },
+    score: { halftime: { home: 1, away: 0 }, fulltime: { home: null, away: null } },
+    _demo: true
+  },
+  {
+    fixture: { id: 1002, date: new Date(Date.now() + 3600000).toISOString(), status: { short: 'NS', elapsed: null }, venue: { name: 'MetLife Stadium', city: 'New York' } },
+    league: { round: 'Group B' },
+    teams: {
+      home: { id: 3, name: 'France', logo: '' },
+      away: { id: 4, name: 'Germany', logo: '' }
+    },
+    goals: { home: null, away: null },
+    score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } },
+    _demo: true
+  },
+  {
+    fixture: { id: 1003, date: new Date(Date.now() + 7200000).toISOString(), status: { short: 'NS', elapsed: null }, venue: { name: 'AT&T Stadium', city: 'Dallas' } },
+    league: { round: 'Group C' },
+    teams: {
+      home: { id: 5, name: 'Spain', logo: '' },
+      away: { id: 6, name: 'England', logo: '' }
+    },
+    goals: { home: null, away: null },
+    score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } },
+    _demo: true
+  },
+  {
+    fixture: { id: 1004, date: new Date(Date.now() - 7200000).toISOString(), status: { short: 'FT', elapsed: 90 }, venue: { name: 'Estadio Azteca', city: 'Mexico City' } },
+    league: { round: 'Group D' },
+    teams: {
+      home: { id: 7, name: 'Netherlands', logo: '' },
+      away: { id: 8, name: 'Portugal', logo: '' }
+    },
+    goals: { home: 3, away: 2 },
+    score: { halftime: { home: 1, away: 1 }, fulltime: { home: 3, away: 2 } },
+    _demo: true
+  }
+];
+
+const DEMO_STATS = {
+  1001: {
+    statistics: [
+      { team: { id: 1 }, statistics: [
+        { type: 'Ball Possession', value: '58%' },
+        { type: 'Total Shots', value: 14 },
+        { type: 'Shots on Goal', value: 6 },
+        { type: 'Corner Kicks', value: 7 },
+        { type: 'Yellow Cards', value: 1 },
+        { type: 'Fouls', value: 11 }
+      ]},
+      { team: { id: 2 }, statistics: [
+        { type: 'Ball Possession', value: '42%' },
+        { type: 'Total Shots', value: 9 },
+        { type: 'Shots on Goal', value: 4 },
+        { type: 'Corner Kicks', value: 3 },
+        { type: 'Yellow Cards', value: 2 },
+        { type: 'Fouls', value: 14 }
+      ]}
+    ],
+    events: [
+      { time: { elapsed: 23 }, type: 'Goal', detail: 'Normal Goal', player: { name: 'Vinicius Jr' }, team: { id: 1 } },
+      { time: { elapsed: 38 }, type: 'Card', detail: 'Yellow Card', player: { name: 'De Paul' }, team: { id: 2 } },
+      { time: { elapsed: 45 }, type: 'Goal', detail: 'Normal Goal', player: { name: 'Messi' }, team: { id: 2 } },
+      { time: { elapsed: 56 }, type: 'Goal', detail: 'Normal Goal', player: { name: 'Rodrygo' }, team: { id: 1 } },
+      { time: { elapsed: 62 }, type: 'Card', detail: 'Yellow Card', player: { name: 'Marquinhos' }, team: { id: 1 } },
+    ],
+    lineups: [
+      { team: { id: 1 }, startXI: [
+        { player: { name: 'Alisson', number: 1 } },
+        { player: { name: 'Danilo', number: 2 } },
+        { player: { name: 'Marquinhos', number: 4 } },
+        { player: { name: 'Gabriel M.', number: 14 } },
+        { player: { name: 'Theo H.', number: 6 } },
+        { player: { name: 'Casemiro', number: 5 } },
+        { player: { name: 'Lucas P.', number: 8 } },
+        { player: { name: 'Raphinha', number: 11 } },
+        { player: { name: 'Rodrygo', number: 9 } },
+        { player: { name: 'Paquetá', number: 10 } },
+        { player: { name: 'Vinicius Jr', number: 7 } }
+      ]},
+      { team: { id: 2 }, startXI: [
+        { player: { name: 'E. Martínez', number: 23 } },
+        { player: { name: 'Molina', number: 26 } },
+        { player: { name: 'Romero', number: 13 } },
+        { player: { name: 'Otamendi', number: 19 } },
+        { player: { name: 'Acuña', number: 8 } },
+        { player: { name: 'De Paul', number: 7 } },
+        { player: { name: 'Mac Allister', number: 20 } },
+        { player: { name: 'Enzo F.', number: 24 } },
+        { player: { name: 'Di María', number: 11 } },
+        { player: { name: 'Dybala', number: 21 } },
+        { player: { name: 'Messi', number: 10 } }
+      ]}
+    ]
+  }
+};
+
+const DEMO_STANDINGS = {
+  'A': [
+    { team: { id: 1, name: 'Brazil' }, points: 6, goalsDiff: 4, all: { played: 2, win: 2, draw: 0, lose: 0, goals: { for: 5, against: 1 } }, form: 'WW' },
+    { team: { id: 2, name: 'Argentina' }, points: 3, goalsDiff: 1, all: { played: 2, win: 1, draw: 0, lose: 1, goals: { for: 3, against: 2 } }, form: 'LW' },
+    { team: { id: 10, name: 'Mexico' }, points: 1, goalsDiff: -2, all: { played: 2, win: 0, draw: 1, lose: 1, goals: { for: 1, against: 3 } }, form: 'DL' },
+    { team: { id: 11, name: 'S. Africa' }, points: 1, goalsDiff: -3, all: { played: 2, win: 0, draw: 1, lose: 1, goals: { for: 0, against: 3 } }, form: 'LD' }
+  ],
+  'B': [
+    { team: { id: 3, name: 'France' }, points: 4, goalsDiff: 3, all: { played: 2, win: 1, draw: 1, lose: 0, goals: { for: 4, against: 1 } }, form: 'WD' },
+    { team: { id: 4, name: 'Germany' }, points: 4, goalsDiff: 2, all: { played: 2, win: 1, draw: 1, lose: 0, goals: { for: 3, against: 1 } }, form: 'DW' },
+    { team: { id: 12, name: 'Japan' }, points: 3, goalsDiff: 0, all: { played: 2, win: 1, draw: 0, lose: 1, goals: { for: 2, against: 2 } }, form: 'LW' },
+    { team: { id: 13, name: 'Morocco' }, points: 0, goalsDiff: -5, all: { played: 2, win: 0, draw: 0, lose: 2, goals: { for: 0, against: 5 } }, form: 'LL' }
+  ]
+};
+
+const TEAM_FLAGS = {
+  'Brazil': '🇧🇷', 'Argentina': '🇦🇷', 'France': '🇫🇷', 'Germany': '🇩🇪',
+  'Spain': '🇪🇸', 'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Netherlands': '🇳🇱', 'Portugal': '🇵🇹',
+  'Mexico': '🇲🇽', 'USA': '🇺🇸', 'Canada': '🇨🇦', 'Uruguay': '🇺🇾',
+  'Japan': '🇯🇵', 'South Korea': '🇰🇷', 'Morocco': '🇲🇦', 'Senegal': '🇸🇳',
+  'S. Africa': '🇿🇦', 'South Africa': '🇿🇦', 'Croatia': '🇭🇷', 'Switzerland': '🇨🇭',
+  'Colombia': '🇨🇴', 'Ecuador': '🇪🇨', 'Australia': '🇦🇺', 'Belgium': '🇧🇪',
+  'Poland': '🇵🇱', 'Denmark': '🇩🇰', 'Serbia': '🇷🇸', 'Czech Republic': '🇨🇿',
+  'Chile': '🇨🇱', 'Peru': '🇵🇪', 'Iran': '🇮🇷', 'Saudi Arabia': '🇸🇦',
+};
+const flag = (name) => TEAM_FLAGS[name] || '🏳️';
+
+const VENUES = [
+  { city: 'New York/New Jersey', stadium: 'MetLife Stadium', country: 'USA', flag: '🇺🇸', capacity: '82,500' },
+  { city: 'Los Angeles', stadium: 'SoFi Stadium', country: 'USA', flag: '🇺🇸', capacity: '70,240' },
+  { city: 'Dallas', stadium: 'AT&T Stadium', country: 'USA', flag: '🇺🇸', capacity: '80,000' },
+  { city: 'San Francisco', stadium: 'Levi\'s Stadium', country: 'USA', flag: '🇺🇸', capacity: '68,500' },
+  { city: 'Miami', stadium: 'Hard Rock Stadium', country: 'USA', flag: '🇺🇸', capacity: '64,767' },
+  { city: 'Seattle', stadium: 'Lumen Field', country: 'USA', flag: '🇺🇸', capacity: '72,000' },
+  { city: 'Boston', stadium: 'Gillette Stadium', country: 'USA', flag: '🇺🇸', capacity: '65,878' },
+  { city: 'Philadelphia', stadium: 'Lincoln Financial Field', country: 'USA', flag: '🇺🇸', capacity: '69,328' },
+  { city: 'Kansas City', stadium: 'Arrowhead Stadium', country: 'USA', flag: '🇺🇸', capacity: '76,416' },
+  { city: 'Atlanta', stadium: 'Mercedes-Benz Stadium', country: 'USA', flag: '🇺🇸', capacity: '71,000' },
+  { city: 'Houston', stadium: 'NRG Stadium', country: 'USA', flag: '🇺🇸', capacity: '72,220' },
+  { city: 'Toronto', stadium: 'BMO Field', country: 'Canada', flag: '🇨🇦', capacity: '30,000' },
+  { city: 'Vancouver', stadium: 'BC Place', country: 'Canada', flag: '🇨🇦', capacity: '54,500' },
+  { city: 'Mexico City', stadium: 'Estadio Azteca', country: 'Mexico', flag: '🇲🇽', capacity: '87,500' },
+  { city: 'Guadalajara', stadium: 'Estadio Akron', country: 'Mexico', flag: '🇲🇽', capacity: '49,850' },
+  { city: 'Monterrey', stadium: 'Estadio BBVA', country: 'Mexico', flag: '🇲🇽', capacity: '53,460' },
+];
+
+const POLLS = [
+  { id: 'p1', question: 'Who scores next?', options: ['Home team', 'Away team', 'No more goals'] },
+  { id: 'p2', question: 'Match of the tournament so far?', options: ['BRA vs ARG', 'FRA vs GER', 'ESP vs ENG', 'Other'] },
+  { id: 'p3', question: 'Who lifts the trophy?', options: ['Brazil', 'France', 'Argentina', 'Other'] },
+  { id: 'p4', question: 'Best stadium so far?', options: ['MetLife NJ', 'SoFi LA', 'Azteca CDMX', 'AT&T Dallas'] },
+];
+
+// ── FIREBASE HELPERS ──────────────────────────────────────────────────────────
+let db = null;
+let fbModules = null;
+
+function initFirebase() {
+  if (db) return db;
+  try {
+    fbModules = window.__firebaseModules;
+    const app = fbModules.initializeApp(FIREBASE_CONFIG);
+    db = fbModules.getDatabase(app);
+    return db;
+  } catch(e) {
+    console.warn('Firebase not configured, running in local mode');
+    return null;
+  }
+}
+
+// ── API HELPERS ──────────────────────────────────────────────────────────────
+function proxyUrl(apiPath) {
+  return `${WORKER_URL}/?url=${encodeURIComponent('https://v3.football.api-sports.io/' + apiPath)}`;
+}
+
+async function fetchFixtures() {
+  const season = SEASON;
+  // For 2026 use next=20, for past seasons use last=20
+  const param = season >= 2026 ? 'next=20' : 'last=20';
+  const r = await fetch(proxyUrl(`fixtures?league=${LEAGUE_ID}&season=${season}&${param}`));
+  const d = await r.json();
+  return d.response || [];
+}
+
+async function fetchLiveFixtures() {
+  const r = await fetch(proxyUrl(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&status=1H-HT-2H-ET-P-BT-LIVE`));
+  const d = await r.json();
+  return d.response || [];
+}
+
+async function fetchFixtureStats(id) {
+  const [statsR, eventsR, lineupsR] = await Promise.all([
+    fetch(proxyUrl(`fixtures/statistics?fixture=${id}`)),
+    fetch(proxyUrl(`fixtures/events?fixture=${id}`)),
+    fetch(proxyUrl(`fixtures/lineups?fixture=${id}`)),
+  ]);
+  const [stats, events, lineups] = await Promise.all([statsR.json(), eventsR.json(), lineupsR.json()]);
+  return { statistics: stats.response, events: events.response, lineups: lineups.response };
+}
+
+async function fetchStandings() {
+  const r = await fetch(proxyUrl(`standings?league=${LEAGUE_ID}&season=${SEASON}`));
+  const d = await r.json();
+  const groups = {};
+  (d.response?.[0]?.league?.standings || []).forEach((grp, i) => {
+    groups[String.fromCharCode(65+i)] = grp;
+  });
+  return groups;
+}
+
+// ── COUNTDOWN ────────────────────────────────────────────────────────────────
+function useCountdown(target) {
+  const [diff, setDiff] = useState(() => target - Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setDiff(target - Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [target]);
+  const d = Math.max(0, Math.floor(diff / 86400000));
+  const h = Math.max(0, Math.floor((diff % 86400000) / 3600000));
+  const m = Math.max(0, Math.floor((diff % 3600000) / 60000));
+  const s = Math.max(0, Math.floor((diff % 60000) / 1000));
+  return { d, h, m, s };
+}
+
+// ── FORMAT HELPERS ───────────────────────────────────────────────────────────
+function fmtTime(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function fmtDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+// ── ROOM CODE ────────────────────────────────────────────────────────────────
+function getRoomCode() {
+  let code = localStorage.getItem('wc26_room');
+  if (!code) {
+    code = Math.random().toString(36).slice(2,8).toUpperCase();
+    localStorage.setItem('wc26_room', code);
+  }
+  return code;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+function SetupModal({ onDone }) {
+  const [name, setName] = useState('');
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <div style={{fontSize:48,textAlign:'center',marginBottom:12}}>⚽</div>
+        <h2>Welcome to WC26</h2>
+        <p>Your World Cup 2026 companion for live scores, predictions, and match battles with friends.</p>
+        <input
+          className="text-input"
+          placeholder="Your name (visible to friends)"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && name.trim() && onDone(name.trim())}
+          autoFocus
+        />
+        <button
+          className="btn btn-gold btn-full"
+          disabled={!name.trim()}
+          onClick={() => onDone(name.trim())}
+          style={{opacity: name.trim() ? 1 : 0.5}}
+        >
+          Let's go →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConfigCard() {
+  return null; // Worker is configured, no setup needed
+}
+
+// ── NAV ICONS ────────────────────────────────────────────────────────────────
+const icons = {
+  home: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  live: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+  table: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>,
+  predict: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  battle: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  info: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+};
+
+// ── HOME TAB ─────────────────────────────────────────────────────────────────
+function HomeTab({ matches, username, roomCode, onCopyRoom }) {
+  const wc2026Start = new Date('2026-06-11T19:00:00Z').getTime();
+  const { d, h, m, s } = useCountdown(wc2026Start);
+  const isStarted = Date.now() > wc2026Start;
+  const isTesting = SEASON === 2022;
+  const live = matches.filter(x => x.fixture.status.short === 'LIVE' || x.fixture.status.short === '1H' || x.fixture.status.short === '2H' || x.fixture.status.short === 'HT');
+  const upcoming = matches.filter(x => x.fixture.status.short === 'NS').slice(0, 3);
+  const recent = matches.filter(x => ['FT','AET','PEN'].includes(x.fixture.status.short)).slice(0, 2);
+
+  return (
+    <div className="fade-in">
+      {isTesting && (
+        <div style={{background:'rgba(61,139,255,0.15)',border:'1px solid rgba(61,139,255,0.3)',borderRadius:10,padding:'8px 14px',marginBottom:10,fontSize:12,color:'var(--blue)'}}>
+          🧪 Testing with Qatar 2022 data — switches to 2026 in June
+        </div>
+      )}
+      <div className="hero">
+        <div className="eyebrow">FIFA WORLD CUP 2026</div>
+        <h1>USA · CANADA<br/>MEXICO</h1>
+        {isStarted ? (
+          <div style={{marginTop:8}}>
+            <div style={{fontSize:13,color:'var(--green)',fontWeight:600}}>🟢 Tournament in progress</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>Jun 11 – Jul 19, 2026 • 48 teams • 104 matches</div>
+          </div>
+        ) : (
+          <>
+            <div className="countdown">{String(d).padStart(2,'0')}:{String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}</div>
+            <div className="countdown-label">DAYS · HRS · MIN · SEC</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginTop:8}}>Jun 11 – Jul 19 • 48 teams • 104 matches</div>
+          </>
+        )}
+      </div>
+
+      <div className="room-banner" onClick={onCopyRoom}>
+        <div>
+          <div className="room-label">Your group room code</div>
+          <div className="room-code">{roomCode}</div>
+        </div>
+        <div className="copy-hint">Tap to copy link 📋</div>
+      </div>
+
+      <ConfigCard />
+
+      {live.length > 0 && (
+        <>
+          <div className="card-header">
+            <div className="section-title">⚡ Live Now</div>
+            <span className="badge badge-live">Live</span>
+          </div>
+          {live.map(m => <CompactMatchCard key={m.fixture.id} match={m} />)}
+        </>
+      )}
+
+      {upcoming.length > 0 && (
+        <>
+          <div className="card-header" style={{marginTop:4}}>
+            <div className="section-title">🗓 Upcoming</div>
+          </div>
+          {upcoming.map(m => <CompactMatchCard key={m.fixture.id} match={m} />)}
+        </>
+      )}
+
+      {recent.length > 0 && (
+        <>
+          <div className="card-header" style={{marginTop:4}}>
+            <div className="section-title">✅ Recent Results</div>
+          </div>
+          {recent.map(m => <CompactMatchCard key={m.fixture.id} match={m} />)}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── COMPACT MATCH CARD ────────────────────────────────────────────────────────
+function CompactMatchCard({ match: m, onClick }) {
+  const isLive = ['LIVE','1H','2H','HT','ET','BT','P'].includes(m.fixture.status.short);
+  const isFT = ['FT','AET','PEN'].includes(m.fixture.status.short);
+  const isNS = m.fixture.status.short === 'NS';
+  return (
+    <div className={`match-card ${isLive ? 'active-match' : ''}`} onClick={onClick}>
+      <div className="match-teams">
+        <div className="team-side">
+          <span className="team-flag">{flag(m.teams.home.name)}</span>
+          <span className="team-name">{m.teams.home.name}</span>
+        </div>
+        <div className="match-score">
+          {isNS ? (
+            <span style={{fontSize:14,color:'var(--muted)',fontFamily:'var(--font-body)',fontWeight:600}}>
+              {fmtTime(m.fixture.date)}
+            </span>
+          ) : (
+            <>
+              <span style={{color: isLive ? 'var(--gold)' : 'var(--text)'}}>{m.goals.home ?? 0}</span>
+              <span className="score-sep">–</span>
+              <span style={{color: isLive ? 'var(--gold)' : 'var(--text)'}}>{m.goals.away ?? 0}</span>
+            </>
+          )}
+        </div>
+        <div className="team-side right">
+          <span className="team-name">{m.teams.away.name}</span>
+          <span className="team-flag">{flag(m.teams.away.name)}</span>
+        </div>
+      </div>
+      <div className="match-meta">
+        <span>{m.league.round}</span>
+        {isLive && <span><span className="live-dot"/>LIVE {m.fixture.status.elapsed}'</span>}
+        {isFT && <span>Full Time</span>}
+        {isNS && <span>{fmtDate(m.fixture.date)}</span>}
+        <span style={{fontSize:11}}>{m.fixture.venue?.city}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── LIVE TAB ─────────────────────────────────────────────────────────────────
+function LiveTab({ matches }) {
+  const [selected, setSelected] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [activeTab, setActiveTab] = useState('stats');
+  const [loading, setLoading] = useState(false);
+
+  const live = matches.filter(x => ['LIVE','1H','2H','HT','ET','BT','P'].includes(x.fixture.status.short));
+  const upcoming = matches.filter(x => x.fixture.status.short === 'NS');
+  const recent = matches.filter(x => ['FT','AET','PEN'].includes(x.fixture.status.short));
+
+  const selectMatch = async (m) => {
+    setSelected(m);
+    setLoading(true);
+    setDetail(null);
+    try {
+      const d = await fetchFixtureStats(m.fixture.id);
+      setDetail(d);
+    } catch(e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const getStat = (stats, teamId, type) => {
+    const teamStats = stats?.find(s => s.team.id === teamId)?.statistics || [];
+    const s = teamStats.find(x => x.type === type);
+    return s?.value || '0';
+  };
+
+  if (selected) {
+    const m = selected;
+    const isLive = ['LIVE','1H','2H','HT','ET','BT','P'].includes(m.fixture.status.short);
+    const hId = m.teams.home.id;
+    const aId = m.teams.away.id;
+
+    const statRows = [
+      'Ball Possession', 'Total Shots', 'Shots on Goal', 'Corner Kicks', 'Yellow Cards', 'Fouls'
+    ];
+
+    const parseVal = v => parseInt(String(v).replace('%','')) || 0;
+
+    const events = detail?.events || [];
+    const lineups = detail?.lineups || [];
+    const hLineup = lineups.find(l => l.team.id === hId)?.startXI || [];
+    const aLineup = lineups.find(l => l.team.id === aId)?.startXI || [];
+
+    return (
+      <div className="fade-in">
+        <button className="btn btn-outline btn-sm" onClick={() => setSelected(null)} style={{marginBottom:12}}>
+          ← Back
+        </button>
+
+        <div className="card" style={{marginBottom:12}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            {isLive && <span className="badge badge-live"><span className="live-dot"/>{m.fixture.status.elapsed}'</span>}
+            <span style={{fontSize:12,color:'var(--muted)'}}>{m.league.round} • {m.fixture.venue?.city}</span>
+          </div>
+          <div className="match-teams">
+            <div className="team-side">
+              <span className="team-flag">{flag(m.teams.home.name)}</span>
+              <span className="team-name">{m.teams.home.name}</span>
+            </div>
+            <div className="match-score" style={{fontSize:40}}>
+              <span>{m.goals.home ?? 0}</span>
+              <span className="score-sep">–</span>
+              <span>{m.goals.away ?? 0}</span>
+            </div>
+            <div className="team-side right">
+              <span className="team-name">{m.teams.away.name}</span>
+              <span className="team-flag">{flag(m.teams.away.name)}</span>
+            </div>
+          </div>
+          {m.score.halftime.home !== null && (
+            <div style={{textAlign:'center',marginTop:8,fontSize:12,color:'var(--muted)'}}>
+              HT: {m.score.halftime.home}–{m.score.halftime.away}
+            </div>
+          )}
+        </div>
+
+        <div className="tabs">
+          {['stats','events','lineups'].map(t => (
+            <div key={t} className={`tab ${activeTab===t?'active':''}`} onClick={() => setActiveTab(t)}>
+              {t.charAt(0).toUpperCase()+t.slice(1)}
+            </div>
+          ))}
+        </div>
+
+        {loading && <div className="spinner"/>}
+
+        {!loading && activeTab === 'stats' && detail?.statistics && (
+          <div className="card">
+            {statRows.map(type => {
+              const hv = parseVal(getStat(detail.statistics, hId, type));
+              const av = parseVal(getStat(detail.statistics, aId, type));
+              const total = hv + av || 1;
+              return (
+                <div key={type} className="stat-row">
+                  <div className="stat-val">{getStat(detail.statistics, hId, type)}</div>
+                  <div style={{flex:1}}>
+                    <div style={{textAlign:'center',fontSize:11,color:'var(--muted)',marginBottom:3}}>{type}</div>
+                    <div style={{display:'flex',height:6,borderRadius:3,overflow:'hidden',background:'var(--bg3)'}}>
+                      <div className="stat-bar home" style={{width:`${(hv/total)*100}%`}}/>
+                      <div className="stat-bar away" style={{width:`${(av/total)*100}%`}}/>
+                    </div>
+                  </div>
+                  <div className="stat-val">{getStat(detail.statistics, aId, type)}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {!loading && activeTab === 'events' && (
+          <div className="card">
+            <div className="event-feed">
+              {events.length === 0 && <div style={{textAlign:'center',color:'var(--muted)',padding:'20px 0',fontSize:13}}>No events yet</div>}
+              {[...events].reverse().map((ev, i) => (
+                <div key={i} className="event-item">
+                  <div className="event-min">{ev.time.elapsed}'</div>
+                  <div className="event-icon">
+                    {ev.type === 'Goal' ? '⚽' : ev.detail === 'Yellow Card' ? '🟨' : ev.detail === 'Red Card' ? '🟥' : ev.type === 'subst' ? '🔄' : '📋'}
+                  </div>
+                  <div className="event-text">
+                    <span className="player">{ev.player?.name}</span>
+                    {ev.type === 'Goal' && <span style={{color:'var(--muted)',fontSize:12}}> ({ev.detail})</span>}
+                  </div>
+                  <div style={{fontSize:11,color:'var(--muted)'}}>
+                    {ev.team.id === hId ? m.teams.home.name.split(' ').pop() : m.teams.away.name.split(' ').pop()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!loading && activeTab === 'lineups' && (
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            {[{team: m.teams.home, lineup: hLineup},{team: m.teams.away, lineup: aLineup}].map(({team,lineup}) => (
+              <div key={team.id} className="card">
+                <div style={{textAlign:'center',marginBottom:10}}>
+                  <span style={{fontSize:20}}>{flag(team.name)}</span>
+                  <div style={{fontFamily:'var(--font-display)',fontSize:14,marginTop:4}}>{team.name}</div>
+                </div>
+                {lineup.map((p,i) => (
+                  <div key={i} style={{display:'flex',gap:8,alignItems:'center',padding:'5px 0',borderTop: i ? '1px solid var(--border)':undefined,fontSize:12}}>
+                    <span style={{width:20,textAlign:'center',color:'var(--muted)',fontWeight:700}}>{p.player.number}</span>
+                    <span>{p.player.name}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="fade-in">
+      {live.length > 0 && (
+        <>
+          <div className="card-header">
+            <div className="section-title">⚡ Live Matches</div>
+            <span className="badge badge-live">Live</span>
+          </div>
+          {live.map(m => <CompactMatchCard key={m.fixture.id} match={m} onClick={() => selectMatch(m)}/>)}
+        </>
+      )}
+      {upcoming.length > 0 && (
+        <>
+          <div className="card-header" style={{marginTop:4}}>
+            <div className="section-title">🗓 Upcoming</div>
+          </div>
+          {upcoming.map(m => <CompactMatchCard key={m.fixture.id} match={m} onClick={() => selectMatch(m)}/>)}
+        </>
+      )}
+      {recent.length > 0 && (
+        <>
+          <div className="card-header" style={{marginTop:4}}>
+            <div className="section-title">✅ Results</div>
+          </div>
+          {recent.map(m => <CompactMatchCard key={m.fixture.id} match={m} onClick={() => selectMatch(m)}/>)}
+        </>
+      )}
+      {matches.length === 0 && (
+        <div className="empty">
+          <div className="big">🕐</div>
+          <h3>No matches yet</h3>
+          <p>Tournament kicks off June 11, 2026.<br/>Check back then for live data!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── STANDINGS TAB ─────────────────────────────────────────────────────────────
+function StandingsTab() {
+  const [standings, setStandings] = useState({});
+  const [activeGroup, setActiveGroup] = useState('A');
+  const [loading, setLoading] = useState(true);
+  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+  useEffect(() => {
+    fetchStandings().then(s => { setStandings(s); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+
+  const grpData = standings[activeGroup] || [];
+
+  return (
+    <div className="fade-in">
+      <div className="card-header">
+        <div className="section-title">🏆 Group Tables</div>
+        <span className="badge badge-gold">2026</span>
+      </div>
+
+      <div className="group-tabs">
+        {groups.map(g => (
+          <div key={g} className={`group-tab ${activeGroup===g?'active':''}`} onClick={() => setActiveGroup(g)}>
+            Group {g}
+          </div>
+        ))}
+      </div>
+
+      {loading && <div className="spinner"/>}
+      {!loading && (
+        <div className="card">
+          <table className="standings-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th style={{textAlign:'left'}}>Team</th>
+                <th>P</th><th>W</th><th>D</th><th>L</th>
+                <th>GF</th><th>GD</th>
+                <th>Pts</th>
+                <th>Form</th>
+              </tr>
+            </thead>
+            <tbody>
+              {grpData.length === 0 && (
+                <tr><td colSpan={10} style={{textAlign:'center',padding:'20px',color:'var(--muted)',fontSize:13}}>
+                  No data yet for Group {activeGroup}
+                </td></tr>
+              )}
+              {grpData.map((row, i) => (
+                <tr key={row.team.id} className={i < 2 ? 'qualify' : i === 2 ? 'maybe' : ''}>
+                  <td style={{color:'var(--muted)',fontWeight:700}}>{i+1}</td>
+                  <td>
+                    <div className="team-cell">
+                      <span>{flag(row.team.name)}</span>
+                      <span style={{fontWeight:500}}>{row.team.name}</span>
+                    </div>
+                  </td>
+                  <td>{row.all.played}</td>
+                  <td>{row.all.win}</td>
+                  <td>{row.all.draw}</td>
+                  <td>{row.all.lose}</td>
+                  <td>{row.all.goals.for}</td>
+                  <td style={{color: row.goalsDiff > 0 ? 'var(--green)' : row.goalsDiff < 0 ? 'var(--red)' : 'var(--muted)'}}>
+                    {row.goalsDiff > 0 ? '+':''}{row.goalsDiff}
+                  </td>
+                  <td className="pts">{row.points}</td>
+                  <td>
+                    <div className="form-dots">
+                      {(row.form||'').split('').slice(-5).map((r,j) => (
+                        <div key={j} className={`form-dot ${r}`}/>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {grpData.length > 0 && (
+            <div style={{display:'flex',gap:16,marginTop:12,paddingTop:10,borderTop:'1px solid var(--border)',fontSize:11,color:'var(--muted)'}}>
+              <span><span style={{color:'var(--green)',fontWeight:700}}>│</span> Advance</span>
+              <span><span style={{color:'var(--gold)',fontWeight:700}}>│</span> Best 3rd (possibly)</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PREDICT TAB ──────────────────────────────────────────────────────────────
+function PredictTab({ matches, username, roomCode }) {
+  const [preds, setPreds] = useState(() => JSON.parse(localStorage.getItem('wc26_preds') || '{}'));
+  const [inputs, setInputs] = useState({});
+
+  const save = (fid) => {
+    if (!username) return alert('Set your name first (tap the badge top right)');
+    const input = inputs[fid] || {};
+    if (input.home === undefined || input.away === undefined) return;
+    const newPreds = { ...preds, [fid]: { home: input.home, away: input.away, ts: Date.now() } };
+    setPreds(newPreds);
+    localStorage.setItem('wc26_preds', JSON.stringify(newPreds));
+
+    // Save to Firebase if available
+    if (db && fbModules) {
+      fbModules.set(fbModules.ref(db, `rooms/${roomCode}/predictions/${username}/${fid}`), {
+        home: input.home, away: input.away, ts: Date.now()
+      });
+    }
+  };
+
+  const setInput = (fid, side, val) => {
+    const v = Math.max(0, Math.min(20, parseInt(val) || 0));
+    setInputs(prev => ({ ...prev, [fid]: { ...(prev[fid]||{}), [side]: v } }));
+  };
+
+  const scoreResult = (match, pred) => {
+    const ah = match.goals.home, aa = match.goals.away;
+    const ph = pred.home, pa = pred.away;
+    if (ah === null) return null;
+    if (ph === ah && pa === aa) return { label: '🎯 Exact!', pts: 3, cls: 'correct' };
+    const realResult = ah > aa ? 'H' : ah < aa ? 'A' : 'D';
+    const predResult = ph > pa ? 'H' : ph < pa ? 'A' : 'D';
+    if (realResult === predResult) return { label: '✓ Right winner', pts: 1, cls: 'partial' };
+    return { label: '✗ Wrong', pts: 0, cls: 'wrong' };
+  };
+
+  const predictable = matches.filter(m => ['NS','1H','2H','HT','ET','BT','P','FT','AET','PEN'].includes(m.fixture.status.short));
+
+  return (
+    <div className="fade-in">
+      <div className="card-header">
+        <div className="section-title">🔮 Predictions</div>
+        <span className="badge badge-gold">Locked before KO</span>
+      </div>
+
+      <div className="card" style={{marginBottom:12,fontSize:13,color:'var(--muted)',lineHeight:1.6}}>
+        <strong style={{color:'var(--text)'}}>How it works:</strong><br/>
+        🎯 Exact score = <strong style={{color:'var(--gold)'}}>3 pts</strong> &nbsp;|&nbsp;
+        ✓ Correct winner = <strong style={{color:'var(--gold)'}}>1 pt</strong> &nbsp;|&nbsp;
+        ✗ Wrong = 0 pts<br/>
+        Predictions lock at kickoff.
+      </div>
+
+      {predictable.map(m => {
+        const fid = m.fixture.id;
+        const pred = preds[fid];
+        const isNS = m.fixture.status.short === 'NS';
+        const isFinished = ['FT','AET','PEN'].includes(m.fixture.status.short);
+        const result = pred && !isNS ? scoreResult(m, pred) : null;
+        const inp = inputs[fid] || {};
+
+        return (
+          <div key={fid} className="pred-match">
+            <div className="pred-teams-row">
+              <div className="pred-team">
+                <span className="pred-flag">{flag(m.teams.home.name)}</span>
+                <span className="pred-name">{m.teams.home.name}</span>
+              </div>
+              {!pred && isNS ? (
+                <div className="score-inputs">
+                  <input type="number" className="score-input" min="0" max="20"
+                    value={inp.home ?? ''}
+                    onChange={e => setInput(fid,'home',e.target.value)}
+                    placeholder="0"
+                  />
+                  <span className="score-vsep">–</span>
+                  <input type="number" className="score-input" min="0" max="20"
+                    value={inp.away ?? ''}
+                    onChange={e => setInput(fid,'away',e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              ) : (
+                <div style={{textAlign:'center'}}>
+                  {isFinished && (
+                    <div style={{fontSize:12,color:'var(--muted)',marginBottom:4}}>
+                      Actual: {m.goals.home}–{m.goals.away}
+                    </div>
+                  )}
+                  {pred ? (
+                    <div style={{fontFamily:'var(--font-display)',fontSize:28,color:'var(--gold)'}}>
+                      {pred.home}–{pred.away}
+                    </div>
+                  ) : (
+                    <div style={{fontFamily:'var(--font-display)',fontSize:22,color:'var(--muted)'}}>
+                      {m.goals.home ?? '?'}–{m.goals.away ?? '?'}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="pred-team">
+                <span className="pred-flag">{flag(m.teams.away.name)}</span>
+                <span className="pred-name">{m.teams.away.name}</span>
+              </div>
+            </div>
+
+            {result && (
+              <div style={{textAlign:'center',marginBottom:10}}>
+                <span className={`pred-result ${result.cls}`}>{result.label} +{result.pts}pts</span>
+              </div>
+            )}
+
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:12,color:'var(--muted)'}}>
+              <span>{isNS ? `KO: ${fmtTime(m.fixture.date)}` : m.fixture.status.short}</span>
+              {!pred && isNS && (
+                <button className="btn btn-gold btn-sm"
+                  disabled={inp.home === undefined || inp.away === undefined}
+                  onClick={() => save(fid)}
+                  style={{opacity: inp.home !== undefined && inp.away !== undefined ? 1 : 0.5}}
+                >
+                  Lock it in 🔒
+                </button>
+              )}
+              {pred && isNS && <span style={{color:'var(--gold)',fontSize:12}}>🔒 Locked: {pred.home}–{pred.away}</span>}
+            </div>
+          </div>
+        );
+      })}
+
+      {predictable.length === 0 && (
+        <div className="empty">
+          <div className="big">🔮</div>
+          <h3>No matches to predict</h3>
+          <p>Upcoming fixtures will appear here when the schedule is confirmed.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── BATTLE TAB ────────────────────────────────────────────────────────────────
+function BattleTab({ matches, username, roomCode }) {
+  const [activeSection, setActiveSection] = useState('polls');
+  const [pollVotes, setPollVotes] = useState(() => JSON.parse(localStorage.getItem('wc26_polls') || '{}'));
+  const [pollData, setPollData] = useState({});
+  const [callIt, setCallIt] = useState(() => JSON.parse(localStorage.getItem('wc26_callit') || '{}'));
+
+  const live = matches.filter(x => ['LIVE','1H','2H','HT','ET','BT','P'].includes(x.fixture.status.short));
+  const currentMatch = live[0];
+
+  useEffect(() => {
+    if (!db || !fbModules || !roomCode) return;
+    POLLS.forEach(poll => {
+      fbModules.onValue(fbModules.ref(db, `rooms/${roomCode}/polls/${poll.id}`), snap => {
+        setPollData(prev => ({ ...prev, [poll.id]: snap.val() || {} }));
+      });
+    });
+  }, [roomCode]);
+
+  const vote = (pollId, option) => {
+    if (pollVotes[pollId]) return;
+    const newVotes = { ...pollVotes, [pollId]: option };
+    setPollVotes(newVotes);
+    localStorage.setItem('wc26_polls', JSON.stringify(newVotes));
+    if (db && fbModules && username) {
+      const voteRef = fbModules.ref(db, `rooms/${roomCode}/polls/${pollId}/${username}`);
+      fbModules.set(voteRef, option);
+    }
+    // Local simulation
+    setPollData(prev => ({
+      ...prev,
+      [pollId]: { ...(prev[pollId]||{}), [username||'guest']: option }
+    }));
+  };
+
+  const getPollCounts = (pollId, options) => {
+    const votes = pollData[pollId] || {};
+    const total = Object.keys(votes).length;
+    return options.map(o => ({
+      option: o,
+      count: Object.values(votes).filter(v => v === o).length,
+      pct: total ? Math.round((Object.values(votes).filter(v => v === o).length / total) * 100) : 0
+    }));
+  };
+
+  const callGoalscorer = (matchId, player) => {
+    if (callIt[matchId]) return;
+    const newCall = { ...callIt, [matchId]: player };
+    setCallIt(newCall);
+    localStorage.setItem('wc26_callit', JSON.stringify(newCall));
+    if (db && fbModules && username) {
+      fbModules.set(fbModules.ref(db, `rooms/${roomCode}/callit/${username}/${matchId}`), { player, ts: Date.now() });
+    }
+  };
+
+  // Demo lineup for Call It
+  const demoLineup = currentMatch ? [
+    'Vinicius Jr', 'Rodrygo', 'Paquetá', 'Raphinha',
+    'Casemiro', 'Lucas P.', 'Messi', 'Di María',
+    'Dybala', 'Mac Allister', 'De Paul'
+  ] : [];
+
+  return (
+    <div className="fade-in">
+      <div className="card-header">
+        <div className="section-title">⚡ Match Battle</div>
+        <span className="badge badge-blue">Friends</span>
+      </div>
+
+      <div className="tabs">
+        {['polls','callit','leaderboard'].map(s => (
+          <div key={s} className={`tab ${activeSection===s?'active':''}`} onClick={() => setActiveSection(s)}>
+            {s === 'polls' ? '📊 Polls' : s === 'callit' ? '⚡ Call It' : '🏆 Board'}
+          </div>
+        ))}
+      </div>
+
+      {activeSection === 'polls' && (
+        <div>
+          {POLLS.map(poll => {
+            const voted = pollVotes[poll.id];
+            const counts = getPollCounts(poll.id, poll.options);
+            const totalVotes = counts.reduce((a,c) => a+c.count, 0);
+            const maxPct = Math.max(...counts.map(c => c.pct));
+
+            return (
+              <div key={poll.id} className="card" style={{marginBottom:10}}>
+                <div style={{fontWeight:600,fontSize:15,marginBottom:12}}>{poll.question}</div>
+                {counts.map(c => (
+                  <div
+                    key={c.option}
+                    className={`poll-option ${voted ? 'voted' : ''} ${voted && c.pct === maxPct && c.count > 0 ? 'winner' : ''}`}
+                    onClick={() => !voted && vote(poll.id, c.option)}
+                  >
+                    <div className="poll-fill" style={{width: voted ? `${c.pct}%` : '0%'}}
+                      data-winner={c.pct === maxPct && c.count > 0}/>
+                    <span className="poll-text">{c.option}</span>
+                    {voted && <span className="poll-pct">{c.pct}%</span>}
+                  </div>
+                ))}
+                {voted && <div className="poll-total">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</div>}
+                {!voted && <div style={{textAlign:'center',fontSize:12,color:'var(--muted)',marginTop:4}}>Tap to vote</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {activeSection === 'callit' && (
+        <div>
+          <div className="card" style={{marginBottom:10,fontSize:13,color:'var(--muted)',lineHeight:1.6}}>
+            <strong style={{color:'var(--text)'}}>⚡ Call It!</strong> — during a live match, tap a player to call them as the <strong style={{color:'var(--gold)'}}>next goalscorer</strong>. +2pts if you're right!
+          </div>
+
+          {live.length === 0 ? (
+            <div className="empty">
+              <div className="big">🎯</div>
+              <h3>No live match</h3>
+              <p>Call It activates when a match is live. Come back during a game!</p>
+            </div>
+          ) : (
+            <>
+              {live.map(m => {
+                const fid = m.fixture.id;
+                const called = callIt[fid];
+                return (
+                  <div key={fid} className="card">
+                    <div className="card-header" style={{marginBottom:8}}>
+                      <div style={{fontFamily:'var(--font-display)',fontSize:16}}>
+                        {flag(m.teams.home.name)} {m.teams.home.name} {m.goals.home}–{m.goals.away} {m.teams.away.name} {flag(m.teams.away.name)}
+                      </div>
+                      <span className="badge badge-live"><span className="live-dot"/>{m.fixture.status.elapsed}'</span>
+                    </div>
+                    {called ? (
+                      <div style={{
+                        background:'rgba(245,197,24,0.1)', border:'1px solid rgba(245,197,24,0.3)',
+                        borderRadius:10, padding:'12px 16px', textAlign:'center'
+                      }}>
+                        <div style={{fontSize:12,color:'var(--muted)',marginBottom:4}}>Your call:</div>
+                        <div style={{fontFamily:'var(--font-display)',fontSize:22,color:'var(--gold)'}}>{called}</div>
+                        <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>Fingers crossed! ⚡</div>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{fontSize:12,color:'var(--muted)',marginBottom:8}}>Who scores next?</div>
+                        <div className="callit-grid">
+                          {demoLineup.map(player => (
+                            <div key={player} className="callit-player" onClick={() => callGoalscorer(fid, player)}>
+                              <div className="player-num">⚽</div>
+                              {player}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
+
+      {activeSection === 'leaderboard' && (
+        <Leaderboard username={username} roomCode={roomCode} matches={matches} preds={JSON.parse(localStorage.getItem('wc26_preds')||'{}')} />
+      )}
+    </div>
+  );
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────────────────────────
+function Leaderboard({ username, roomCode, matches, preds }) {
+  const [board, setBoard] = useState([]);
+
+  useEffect(() => {
+    // Build local leaderboard from predictions
+    const calcPts = (predsObj) => {
+      let pts = 0;
+      Object.entries(predsObj).forEach(([fid, pred]) => {
+        const match = matches.find(m => String(m.fixture.id) === String(fid));
+        if (!match) return;
+        if (match.goals.home === null) return;
+        if (pred.home === match.goals.home && pred.away === match.goals.away) pts += 3;
+        else {
+          const rr = match.goals.home > match.goals.away ? 'H' : match.goals.home < match.goals.away ? 'A' : 'D';
+          const pr = pred.home > pred.away ? 'H' : pred.home < pred.away ? 'A' : 'D';
+          if (rr === pr) pts += 1;
+        }
+      });
+      return pts;
+    };
+
+    if (db && fbModules && roomCode) {
+      fbModules.onValue(fbModules.ref(db, `rooms/${roomCode}/predictions`), snap => {
+        const data = snap.val() || {};
+        const rows = Object.entries(data).map(([name, userPreds]) => ({
+          name,
+          pts: calcPts(userPreds),
+          predictions: Object.keys(userPreds).length
+        })).sort((a,b) => b.pts - a.pts);
+        setBoard(rows);
+      });
+    } else {
+      // Local only
+      const localPts = calcPts(preds);
+      setBoard([{ name: username || 'You', pts: localPts, predictions: Object.keys(preds).length }]);
+    }
+  }, [matches, preds, username, roomCode]);
+
+  return (
+    <div>
+      <div style={{fontSize:12,color:'var(--muted)',marginBottom:12,textAlign:'center'}}>
+        {db ? `Room: ${roomCode}` : 'Local mode — Firebase not connected for group leaderboard'}
+      </div>
+      {board.length === 0 && (
+        <div className="empty">
+          <div className="big">🏆</div>
+          <h3>No scores yet</h3>
+          <p>Lock in predictions and complete matches to see the leaderboard!</p>
+        </div>
+      )}
+      {board.map((row, i) => (
+        <div key={row.name} className={`lb-row ${row.name === username ? 'me' : ''}`}>
+          <div className={`lb-rank ${i < 3 ? 'top' : ''}`}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</div>
+          <div>
+            <div className="lb-name">{row.name}{row.name === username ? ' (you)' : ''}</div>
+            <div className="lb-breakdown">{row.predictions} prediction{row.predictions !== 1 ? 's' : ''}</div>
+          </div>
+          <div className="lb-pts">{row.pts}<span style={{fontSize:14,color:'var(--muted)'}}>pts</span></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── INFO TAB ──────────────────────────────────────────────────────────────────
+function InfoTab() {
+  const [venueFilter, setVenueFilter] = useState('All');
+  const countries = ['All', 'USA', 'Canada', 'Mexico'];
+  const filtered = venueFilter === 'All' ? VENUES : VENUES.filter(v => v.country === venueFilter);
+
+  return (
+    <div className="fade-in">
+      <div className="hero" style={{textAlign:'left', padding:'18px 16px'}}>
+        <div className="eyebrow">World Cup 2026</div>
+        <h1 style={{fontSize:26}}>The Biggest<br/>Tournament Ever</h1>
+        <div style={{fontSize:13,color:'var(--muted)',marginTop:6}}>June 11 – July 19, 2026</div>
+      </div>
+
+      <div className="info-grid" style={{marginBottom:12}}>
+        <div className="info-tile"><div className="num">48</div><div className="label">Teams</div></div>
+        <div className="info-tile"><div className="num">104</div><div className="label">Matches</div></div>
+        <div className="info-tile"><div className="num">16</div><div className="label">Stadiums</div></div>
+        <div className="info-tile"><div className="num">12</div><div className="label">Groups</div></div>
+        <div className="info-tile"><div className="num">3</div><div className="label">Host Nations</div></div>
+        <div className="info-tile"><div className="num">39</div><div className="label">Days</div></div>
+      </div>
+
+      <div className="card" style={{marginBottom:12}}>
+        <div className="card-header"><div className="section-title">📋 Format</div></div>
+        <div style={{fontSize:13,lineHeight:1.8,color:'var(--muted)'}}>
+          <div>🔵 <strong style={{color:'var(--text)'}}>Group Stage</strong> — 12 groups of 4 teams</div>
+          <div>🟡 <strong style={{color:'var(--text)'}}>Advance</strong> — Top 2 per group + 8 best 3rd placed teams</div>
+          <div>🟢 <strong style={{color:'var(--text)'}}>Knockout</strong> — Round of 32 → R16 → QF → SF → Final</div>
+          <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border)'}}>
+            🏆 <strong style={{color:'var(--text)'}}>Final</strong> — MetLife Stadium, New York/New Jersey<br/>
+            <span style={{marginLeft:22}}>July 19, 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="card-header">
+        <div className="section-title">🏟 Stadiums</div>
+      </div>
+      <div className="group-tabs" style={{marginBottom:10}}>
+        {countries.map(c => (
+          <div key={c} className={`group-tab ${venueFilter===c?'active':''}`} onClick={() => setVenueFilter(c)}>{c}</div>
+        ))}
+      </div>
+      {filtered.map(v => (
+        <div key={v.city} className="venue-card">
+          <div className="venue-flag">{v.flag}</div>
+          <div>
+            <div className="venue-name">{v.stadium}</div>
+            <div className="venue-city">{v.city}, {v.country}</div>
+          </div>
+          <div className="venue-cap">{v.capacity}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// APP ROOT
+// ══════════════════════════════════════════════════════════════════════════════
+function App() {
+  const [tab, setTab] = useState('home');
+  const [matches, setMatches] = useState([]);
+  const [username, setUsername] = useState(() => localStorage.getItem('wc26_user') || '');
+  const [showSetup, setShowSetup] = useState(false);
+  const [showNameEdit, setShowNameEdit] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [copied, setCopied] = useState(false);
+  const roomCode = getRoomCode();
+
+  useEffect(() => {
+    if (!username) setShowSetup(true);
+  }, []);
+
+  useEffect(() => {
+    // Init Firebase
+    initFirebase();
+    // Fetch matches
+    fetchFixtures().then(setMatches).catch(console.error);
+    // Poll live data
+    const interval = setInterval(() => {
+      fetchFixtures().then(setMatches).catch(console.error);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSetup = (name) => {
+    setUsername(name);
+    localStorage.setItem('wc26_user', name);
+    setShowSetup(false);
+  };
+
+  const handleCopyRoom = async () => {
+    const url = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch(e) {
+      alert(`Share this link:\n${url}`);
+    }
+  };
+
+  const navItems = [
+    { id: 'home', icon: icons.home, label: 'Home' },
+    { id: 'live', icon: icons.live, label: 'Scores' },
+    { id: 'table', icon: icons.table, label: 'Tables' },
+    { id: 'predict', icon: icons.predict, label: 'Predict' },
+    { id: 'battle', icon: icons.battle, label: 'Battle' },
+    { id: 'info', icon: icons.info, label: 'Info' },
+  ];
+
+  return (
+    <>
+      {showSetup && <SetupModal onDone={handleSetup} />}
+      {copied && (
+        <div style={{
+          position:'fixed',top:80,left:'50%',transform:'translateX(-50%)',
+          background:'var(--green)',color:'#000',borderRadius:30,padding:'8px 20px',
+          fontWeight:700,fontSize:14,zIndex:300,animation:'fadeIn 0.2s ease'
+        }}>
+          Link copied! ✓
+        </div>
+      )}
+
+      <div className="top-nav">
+        <div className="logo">WC<span>26</span></div>
+        <div
+          className={`username-badge ${username ? 'set' : ''}`}
+          onClick={() => { setNameInput(username); setShowNameEdit(true); }}
+        >
+          {username || 'Set name'}
+        </div>
+      </div>
+
+      {showNameEdit && (
+        <div className="modal-overlay" onClick={() => setShowNameEdit(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Your Name</h2>
+            <p>This is shown to friends in the group leaderboard.</p>
+            <input
+              className="text-input"
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && nameInput.trim() && (handleSetup(nameInput.trim()), setShowNameEdit(false))}
+              autoFocus
+            />
+            <button className="btn btn-gold btn-full" onClick={() => { handleSetup(nameInput.trim()); setShowNameEdit(false); }}>
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="content">
+        {tab === 'home' && <HomeTab matches={matches} username={username} roomCode={roomCode} onCopyRoom={handleCopyRoom}/>}
+        {tab === 'live' && <LiveTab matches={matches}/>}
+        {tab === 'table' && <StandingsTab/>}
+        {tab === 'predict' && <PredictTab matches={matches} username={username} roomCode={roomCode}/>}
+        {tab === 'battle' && <BattleTab matches={matches} username={username} roomCode={roomCode}/>}
+        {tab === 'info' && <InfoTab/>}
+      </div>
+
+      <nav className="bottom-nav">
+        {navItems.map(n => (
+          <button key={n.id} className={`nav-item ${tab===n.id?'active':''}`} onClick={() => setTab(n.id)}>
+            {n.icon}
+            {n.label}
+          </button>
+        ))}
+      </nav>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
