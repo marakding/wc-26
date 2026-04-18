@@ -3,1627 +3,1555 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0a0f1e">
+<meta name="theme-color" content="#07080a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="WC26">
-<meta name="description" content="FIFA World Cup 2026 Companion App">
-<title>⚽ WC26 — World Cup Companion</title>
+<title>WC26</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getDatabase, ref, set, get, onValue, push, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-  window.__firebaseModules = { initializeApp, getDatabase, ref, set, get, onValue, push, update };
-</script>
 <style>
-  :root {
-    --bg: #06090f;
-    --bg2: #0d1424;
-    --bg3: #131d35;
-    --card: #111827;
-    --card2: #1a2540;
-    --border: rgba(255,255,255,0.07);
-    --gold: #f5c518;
-    --gold2: #e8a800;
-    --green: #00e676;
-    --red: #ff3d57;
-    --blue: #3d8bff;
-    --text: #f0f4ff;
-    --muted: #6b7fa3;
-    --font-display: 'Bebas Neue', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
+:root {
+  --bg-0: #07080a;
+  --bg-1: #0d0f12;
+  --bg-2: #14171c;
+  --bg-3: #1c2028;
+  --bg-4: #262b35;
+  --line: #22262f;
+  --line-strong: #30363f;
+  --ink-0: #f5f6f8;
+  --ink-1: #c8ccd3;
+  --ink-2: #8b919c;
+  --ink-3: #545a66;
+  --acc-red: oklch(0.62 0.22 25);
+  --acc-red-d: oklch(0.38 0.14 25);
+  --acc-grn: oklch(0.72 0.19 150);
+  --acc-grn-d: oklch(0.38 0.12 150);
+  --f-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --f-sans: 'Space Grotesk', system-ui, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg-1); color: var(--ink-0); height: 100%; }
+body { font-family: var(--f-sans); -webkit-font-smoothing: antialiased; overflow: hidden; }
+#root { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+button { font-family: inherit; cursor: pointer; }
+input { font-family: inherit; }
+::-webkit-scrollbar { width: 0; height: 0; }
+scrollbar-width: none;
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--acc-red) 70%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in oklch, var(--acc-red) 0%, transparent); }
+}
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    min-height: 100dvh;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
+.screen-enter { animation: screen-in .32s ease-out; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.chunky { font-family: var(--f-mono); font-weight: 700; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.caps { text-transform: uppercase; letter-spacing: 0.08em; }
 
-  #root { min-height: 100dvh; display: flex; flex-direction: column; }
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--acc-red); flex-shrink: 0;
+  animation: live-pulse 1.6s ease-out infinite;
+  display: inline-block;
+}
 
-  /* ── TOP NAV ── */
-  .top-nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(6,9,15,0.92);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-    padding: calc(var(--safe-top) + 10px) 16px 10px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .top-nav .logo {
-    font-family: var(--font-display);
-    font-size: 28px;
-    letter-spacing: 2px;
-    color: var(--gold);
-    line-height: 1;
-  }
-  .top-nav .logo span { color: var(--text); }
-  .username-badge {
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 12px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-  }
-  .username-badge.set { color: var(--gold); border-color: rgba(245,197,24,0.3); }
+.screen-scroll {
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex: 1;
+  padding-bottom: calc(72px + var(--safe-bottom));
+}
+.screen-scroll::-webkit-scrollbar { display: none; }
 
-  /* ── BOTTOM NAV ── */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(6,9,15,0.95);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    padding: 8px 0 calc(var(--safe-bottom) + 8px);
-    display: flex;
-  }
-  .nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-    cursor: pointer; padding: 4px 0; color: var(--muted);
-    transition: color 0.2s; font-size: 11px; font-weight: 500;
-    border: none; background: none;
-  }
-  .nav-item.active { color: var(--gold); }
-  .nav-item svg { width: 22px; height: 22px; }
+/* Bottom nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  background: var(--bg-0);
+  border-top: 1px solid var(--line-strong);
+  padding-bottom: var(--safe-bottom);
+}
+.nav-tick-strip { display: flex; height: 3px; }
+.nav-tick { flex: 1; transition: background .2s ease; }
+.nav-tabs { display: flex; padding: 6px 0 8px; }
+.nav-btn {
+  flex: 1; background: none; border: none;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 0;
+}
+.nav-label {
+  font-family: var(--f-mono); font-size: 8px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.nav-idx {
+  font-family: var(--f-mono); font-size: 7px;
+  letter-spacing: 0.1em;
+}
 
-  /* ── CONTENT ── */
-  .content {
-    flex: 1;
-    padding: 16px 16px calc(80px + var(--safe-bottom));
-    max-width: 600px; margin: 0 auto; width: 100%;
-  }
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  animation: fadeIn .2s ease;
+}
+.modal {
+  background: var(--bg-2); border: 1px solid var(--line-strong);
+  width: 100%; max-width: 380px; padding: 28px 22px;
+  animation: screen-in .3s ease-out;
+}
+.modal h2 { font-family: var(--f-mono); font-weight: 700; font-size: 22px; letter-spacing: -0.03em; margin-bottom: 6px; }
+.modal p { font-size: 14px; color: var(--ink-2); margin-bottom: 20px; line-height: 1.6; }
+.text-input {
+  width: 100%; background: var(--bg-3); border: 1px solid var(--line-strong);
+  color: var(--ink-0); font-family: var(--f-mono); font-size: 15px;
+  padding: 11px 12px; outline: none; margin-bottom: 10px;
+  transition: border-color .2s;
+}
+.text-input:focus { border-color: var(--acc-red); }
+.btn-primary {
+  width: 100%; background: var(--acc-red); color: #fff;
+  border: none; font-family: var(--f-mono); font-weight: 700;
+  font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 12px; cursor: pointer; transition: opacity .15s;
+}
+.btn-primary:hover { opacity: .85; }
+.btn-primary:disabled { opacity: .4; cursor: default; }
+.btn-ghost {
+  background: none; border: 1px solid var(--line-strong);
+  color: var(--ink-1); font-family: var(--f-mono); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 10px; cursor: pointer; transition: border-color .15s;
+}
+.btn-ghost:hover { border-color: var(--ink-2); }
 
-  /* ── CARDS ── */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-  .card-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 14px;
-  }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: 20px; letter-spacing: 1px;
-    color: var(--text);
-  }
-  .badge {
-    font-size: 11px; font-weight: 600; padding: 3px 8px;
-    border-radius: 20px; letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  .badge-live { background: rgba(255,61,87,0.2); color: var(--red); border: 1px solid rgba(255,61,87,0.3); }
-  .badge-gold { background: rgba(245,197,24,0.15); color: var(--gold); border: 1px solid rgba(245,197,24,0.3); }
-  .badge-blue { background: rgba(61,139,255,0.15); color: var(--blue); border: 1px solid rgba(61,139,255,0.3); }
+/* Spinner */
+.spinner {
+  width: 24px; height: 24px; border: 2px solid var(--line-strong);
+  border-top-color: var(--acc-red); border-radius: 50%;
+  animation: spin .7s linear infinite; margin: 40px auto;
+}
 
-  /* ── MATCH CARD ── */
-  .match-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: border-color 0.2s, transform 0.15s;
-    position: relative; overflow: hidden;
-  }
-  .match-card::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(245,197,24,0.03), transparent);
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .match-card:hover::before, .match-card.active-match::before { opacity: 1; }
-  .match-card.active-match { border-color: rgba(255,61,87,0.4); }
-  .match-card:active { transform: scale(0.98); }
-
-  .match-teams {
-    display: flex; align-items: center; gap: 10px;
-  }
-  .team-side {
-    flex: 1; display: flex; align-items: center; gap: 8px;
-  }
-  .team-side.right { flex-direction: row-reverse; text-align: right; }
-  .team-flag { font-size: 26px; }
-  .team-name { font-family: var(--font-display); font-size: 17px; letter-spacing: 0.5px; }
-  .match-score {
-    display: flex; align-items: center; gap: 6px;
-    font-family: var(--font-display); font-size: 28px;
-    color: var(--text); min-width: 70px; justify-content: center;
-  }
-  .score-sep { color: var(--muted); font-size: 22px; }
-  .match-meta {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-top: 10px; padding-top: 10px;
-    border-top: 1px solid var(--border);
-    font-size: 12px; color: var(--muted);
-  }
-  .live-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--red);
-    box-shadow: 0 0 6px var(--red);
-    animation: pulse 1.5s infinite;
-    display: inline-block; margin-right: 5px;
-  }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-  /* ── STATS BAR ── */
-  .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .stat-label { font-size: 11px; color: var(--muted); width: 90px; text-align: right; }
-  .stat-label.right { text-align: left; }
-  .stat-bar-wrap { flex: 1; display: flex; gap: 3px; height: 6px; border-radius: 3px; overflow: hidden; background: var(--bg3); }
-  .stat-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-  .stat-bar.home { background: var(--gold); margin-left: auto; border-radius: 3px 0 0 3px; }
-  .stat-bar.away { background: var(--blue); border-radius: 0 3px 3px 0; }
-  .stat-val { font-size: 12px; font-weight: 600; width: 30px; text-align: center; }
-
-  /* ── STANDINGS ── */
-  .standings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .standings-table th { color: var(--muted); font-weight: 500; font-size: 11px; padding: 4px 6px; text-align: center; }
-  .standings-table th:first-child { text-align: left; }
-  .standings-table td { padding: 8px 6px; text-align: center; border-top: 1px solid var(--border); }
-  .standings-table td:first-child { text-align: left; }
-  .standings-table tr.qualify { }
-  .standings-table tr.qualify td:first-child { border-left: 2px solid var(--green); padding-left: 8px; }
-  .standings-table tr.maybe td:first-child { border-left: 2px solid var(--gold); padding-left: 8px; }
-  .team-cell { display: flex; align-items: center; gap: 7px; }
-  .form-dots { display: flex; gap: 3px; }
-  .form-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .form-dot.W { background: var(--green); }
-  .form-dot.D { background: var(--gold); }
-  .form-dot.L { background: var(--red); }
-  .pts { font-weight: 700; color: var(--text); }
-
-  /* ── PREDICTION ── */
-  .pred-match {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 10px;
-  }
-  .pred-teams-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    margin-bottom: 14px;
-  }
-  .pred-team { text-align: center; }
-  .pred-flag { font-size: 32px; display: block; margin-bottom: 4px; }
-  .pred-name { font-family: var(--font-display); font-size: 16px; }
-  .score-inputs { display: flex; align-items: center; gap: 8px; }
-  .score-input {
-    width: 50px; height: 50px;
-    background: var(--bg3);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: var(--font-display);
-    font-size: 28px;
-    text-align: center;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .score-input:focus { border-color: var(--gold); }
-  .score-input::-webkit-inner-spin-button,
-  .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-  .score-vsep { color: var(--muted); font-size: 20px; }
-  .btn {
-    border: none; border-radius: 10px; cursor: pointer;
-    font-family: var(--font-body); font-weight: 600; font-size: 14px;
-    padding: 10px 20px; transition: all 0.2s;
-  }
-  .btn-gold { background: var(--gold); color: #000; }
-  .btn-gold:hover { background: var(--gold2); }
-  .btn-gold:active { transform: scale(0.96); }
-  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .btn-sm { padding: 7px 14px; font-size: 13px; }
-  .btn-full { width: 100%; text-align: center; }
-  .pred-locked {
-    display: flex; align-items: center; justify-content: space-between;
-    background: rgba(245,197,24,0.08);
-    border: 1px solid rgba(245,197,24,0.2);
-    border-radius: 10px; padding: 10px 14px;
-    font-size: 14px;
-  }
-  .pred-locked .locked-score { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
-  .pred-result {
-    font-weight: 700; font-size: 13px;
-  }
-  .pred-result.correct { color: var(--green); }
-  .pred-result.partial { color: var(--gold); }
-  .pred-result.wrong { color: var(--red); }
-
-  /* ── POLL ── */
-  .poll-option {
-    position: relative; overflow: hidden;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 11px 14px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: border-color 0.2s;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .poll-option.voted { border-color: var(--gold); cursor: default; }
-  .poll-option.voted.winner { border-color: var(--green); }
-  .poll-fill {
-    position: absolute; left: 0; top: 0; bottom: 0;
-    background: rgba(245,197,24,0.1);
-    transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
-    border-radius: 10px;
-  }
-  .poll-fill.winner { background: rgba(0,230,118,0.1); }
-  .poll-text { position: relative; z-index: 1; font-weight: 500; font-size: 14px; }
-  .poll-pct { position: relative; z-index: 1; font-weight: 700; font-size: 14px; color: var(--gold); }
-  .poll-total { text-align: center; color: var(--muted); font-size: 12px; margin-top: 6px; }
-
-  /* ── CALL IT ── */
-  .callit-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 8px; margin-top: 4px;
-  }
-  .callit-player {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex; align-items: center; gap: 8px;
-    font-size: 13px; font-weight: 500;
-  }
-  .callit-player:active { transform: scale(0.97); }
-  .callit-player.called { border-color: var(--gold); background: rgba(245,197,24,0.1); color: var(--gold); }
-  .callit-player.correct { border-color: var(--green); background: rgba(0,230,118,0.1); color: var(--green); }
-  .callit-player.wrong { border-color: var(--red); opacity: 0.5; }
-  .player-num { width: 22px; height: 22px; border-radius: 50%; background: var(--card2); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-  /* ── LEADERBOARD ── */
-  .lb-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    margin-bottom: 6px;
-    background: var(--bg3);
-    transition: background 0.2s;
-  }
-  .lb-row.me { background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.2); }
-  .lb-rank { font-family: var(--font-display); font-size: 20px; color: var(--muted); width: 28px; flex-shrink: 0; }
-  .lb-rank.top { color: var(--gold); }
-  .lb-name { flex: 1; font-weight: 500; }
-  .lb-pts { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
-  .lb-breakdown { font-size: 11px; color: var(--muted); }
-
-  /* ── INFO ── */
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .info-tile {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px;
-    text-align: center;
-  }
-  .info-tile .num { font-family: var(--font-display); font-size: 36px; color: var(--gold); line-height: 1; }
-  .info-tile .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
-  .venue-card {
-    background: var(--bg3); border: 1px solid var(--border);
-    border-radius: 12px; padding: 12px 14px;
-    margin-bottom: 8px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .venue-flag { font-size: 22px; }
-  .venue-name { font-weight: 600; font-size: 14px; }
-  .venue-city { font-size: 12px; color: var(--muted); }
-  .venue-cap { font-size: 12px; color: var(--blue); font-weight: 600; margin-left: auto; }
-
-  /* ── GROUP TABS ── */
-  .group-tabs {
-    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
-    scrollbar-width: none; -webkit-overflow-scrolling: touch;
-    margin-bottom: 12px;
-  }
-  .group-tabs::-webkit-scrollbar { display: none; }
-  .group-tab {
-    flex-shrink: 0;
-    background: var(--bg3); border: 1px solid var(--border);
-    border-radius: 8px; padding: 6px 12px;
-    font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: all 0.2s; color: var(--muted);
-    white-space: nowrap;
-  }
-  .group-tab.active { background: var(--gold); color: #000; border-color: var(--gold); }
-
-  /* ── SETUP / MODAL ── */
-  .modal-overlay {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .modal {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 28px 24px;
-    width: 100%; max-width: 400px;
-    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.97); } to { opacity: 1; transform: none; } }
-  .modal h2 { font-family: var(--font-display); font-size: 28px; margin-bottom: 6px; }
-  .modal p { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
-  .text-input {
-    width: 100%; background: var(--bg3); border: 2px solid var(--border);
-    border-radius: 10px; color: var(--text); font-family: var(--font-body);
-    font-size: 16px; padding: 12px 14px; outline: none;
-    transition: border-color 0.2s; margin-bottom: 12px;
-  }
-  .text-input:focus { border-color: var(--gold); }
-
-  /* ── CONFIG CARD ── */
-  .config-card {
-    background: var(--card2);
-    border: 1px solid rgba(245,197,24,0.2);
-    border-radius: 14px; padding: 16px;
-    margin-bottom: 12px;
-  }
-  .config-card h3 { font-family: var(--font-display); font-size: 18px; margin-bottom: 4px; color: var(--gold); }
-  .config-card p { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
-  .code-block {
-    background: var(--bg); border-radius: 8px; padding: 10px 12px;
-    font-family: monospace; font-size: 12px; color: var(--green);
-    overflow-x: auto; margin-bottom: 8px; white-space: nowrap;
-  }
-
-  /* ── TABS (match detail) ── */
-  .tabs {
-    display: flex; border-bottom: 1px solid var(--border); margin-bottom: 14px;
-  }
-  .tab {
-    padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
-    color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
-    transition: color 0.2s, border-color 0.2s;
-  }
-  .tab.active { color: var(--gold); border-color: var(--gold); }
-
-  /* ── EVENT FEED ── */
-  .event-feed { padding: 4px 0; }
-  .event-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 7px 0; border-bottom: 1px solid var(--border);
-    font-size: 13px;
-  }
-  .event-min { color: var(--muted); font-weight: 700; font-size: 12px; width: 32px; flex-shrink: 0; }
-  .event-icon { font-size: 16px; }
-  .event-text { flex: 1; }
-  .event-text .player { font-weight: 600; }
-
-  /* ── EMPTY STATE ── */
-  .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
-  .empty .big { font-size: 48px; margin-bottom: 12px; }
-  .empty h3 { font-family: var(--font-display); font-size: 22px; color: var(--text); margin-bottom: 6px; }
-  .empty p { font-size: 14px; line-height: 1.6; }
-
-  /* ── HERO BANNER ── */
-  .hero {
-    background: linear-gradient(135deg, #0d1f3c, #1a0a2e);
-    border: 1px solid var(--border);
-    border-radius: 18px; padding: 22px 20px;
-    margin-bottom: 14px; position: relative; overflow: hidden;
-    text-align: center;
-  }
-  .hero::before {
-    content: '⚽';
-    position: absolute; font-size: 120px; opacity: 0.05;
-    top: -20px; right: -20px; transform: rotate(15deg);
-    pointer-events: none;
-  }
-  .hero .eyebrow { font-size: 11px; font-weight: 600; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-  .hero h1 { font-family: var(--font-display); font-size: 34px; letter-spacing: 2px; line-height: 1.1; margin-bottom: 6px; }
-  .hero .sub { font-size: 13px; color: var(--muted); }
-  .hero .countdown { font-family: var(--font-display); font-size: 42px; color: var(--gold); letter-spacing: 4px; margin: 10px 0 4px; }
-  .hero .countdown-label { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-
-  /* ── ROOM CODE ── */
-  .room-banner {
-    background: linear-gradient(90deg, rgba(245,197,24,0.1), rgba(61,139,255,0.08));
-    border: 1px solid rgba(245,197,24,0.2);
-    border-radius: 12px; padding: 12px 16px;
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 14px; cursor: pointer;
-    transition: border-color 0.2s;
-  }
-  .room-code { font-family: var(--font-display); font-size: 24px; color: var(--gold); letter-spacing: 4px; }
-  .room-label { font-size: 12px; color: var(--muted); }
-  .copy-hint { margin-left: auto; font-size: 12px; color: var(--blue); font-weight: 600; }
-
-  /* Animation */
-  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-  .fade-in { animation: fadeIn 0.35s ease both; }
-
-  .spinner {
-    width: 28px; height: 28px; border: 2px solid var(--border);
-    border-top-color: var(--gold); border-radius: 50%;
-    animation: spin 0.7s linear infinite; margin: 30px auto;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* Toasts */
+.toast {
+  position: fixed; top: calc(var(--safe-top) + 60px); left: 50%;
+  transform: translateX(-50%);
+  background: var(--acc-grn); color: #000;
+  font-family: var(--f-mono); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; padding: 8px 18px; z-index: 200;
+  animation: fadeIn .2s ease;
+  white-space: nowrap;
+}
 </style>
 </head>
 <body>
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState, useEffect, useRef, useCallback } = React;
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
-// ── CONFIG ──────────────────────────────────────────────────────────────────
+// ── CONFIG ────────────────────────────────────────────────────────────────────
 const WORKER_URL = 'https://wc26.marakding.workers.dev';
-const FIREBASE_CONFIG = null; // Add Firebase config here later for multiplayer
 const LEAGUE_ID = 1;
-const SEASON = 2022; // Switch to 2026 when tournament starts in June
-// ────────────────────────────────────────────────────────────────────────────
-// ────────────────────────────────────────────────────────────────────────────
+const SEASON = 2022; // → 2026 in June
 
-// ── DEMO DATA (used when API key not configured) ─────────────────────────────
-const DEMO_MATCHES = [
-  {
-    fixture: { id: 1001, date: new Date().toISOString(), status: { short: 'LIVE', elapsed: 67 }, venue: { name: 'SoFi Stadium', city: 'Los Angeles' } },
-    league: { round: 'Group A' },
-    teams: {
-      home: { id: 1, name: 'Brazil', logo: '' },
-      away: { id: 2, name: 'Argentina', logo: '' }
-    },
-    goals: { home: 2, away: 1 },
-    score: { halftime: { home: 1, away: 0 }, fulltime: { home: null, away: null } },
-    _demo: true
-  },
-  {
-    fixture: { id: 1002, date: new Date(Date.now() + 3600000).toISOString(), status: { short: 'NS', elapsed: null }, venue: { name: 'MetLife Stadium', city: 'New York' } },
-    league: { round: 'Group B' },
-    teams: {
-      home: { id: 3, name: 'France', logo: '' },
-      away: { id: 4, name: 'Germany', logo: '' }
-    },
-    goals: { home: null, away: null },
-    score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } },
-    _demo: true
-  },
-  {
-    fixture: { id: 1003, date: new Date(Date.now() + 7200000).toISOString(), status: { short: 'NS', elapsed: null }, venue: { name: 'AT&T Stadium', city: 'Dallas' } },
-    league: { round: 'Group C' },
-    teams: {
-      home: { id: 5, name: 'Spain', logo: '' },
-      away: { id: 6, name: 'England', logo: '' }
-    },
-    goals: { home: null, away: null },
-    score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } },
-    _demo: true
-  },
-  {
-    fixture: { id: 1004, date: new Date(Date.now() - 7200000).toISOString(), status: { short: 'FT', elapsed: 90 }, venue: { name: 'Estadio Azteca', city: 'Mexico City' } },
-    league: { round: 'Group D' },
-    teams: {
-      home: { id: 7, name: 'Netherlands', logo: '' },
-      away: { id: 8, name: 'Portugal', logo: '' }
-    },
-    goals: { home: 3, away: 2 },
-    score: { halftime: { home: 1, away: 1 }, fulltime: { home: 3, away: 2 } },
-    _demo: true
-  }
-];
-
-const DEMO_STATS = {
-  1001: {
-    statistics: [
-      { team: { id: 1 }, statistics: [
-        { type: 'Ball Possession', value: '58%' },
-        { type: 'Total Shots', value: 14 },
-        { type: 'Shots on Goal', value: 6 },
-        { type: 'Corner Kicks', value: 7 },
-        { type: 'Yellow Cards', value: 1 },
-        { type: 'Fouls', value: 11 }
-      ]},
-      { team: { id: 2 }, statistics: [
-        { type: 'Ball Possession', value: '42%' },
-        { type: 'Total Shots', value: 9 },
-        { type: 'Shots on Goal', value: 4 },
-        { type: 'Corner Kicks', value: 3 },
-        { type: 'Yellow Cards', value: 2 },
-        { type: 'Fouls', value: 14 }
-      ]}
-    ],
-    events: [
-      { time: { elapsed: 23 }, type: 'Goal', detail: 'Normal Goal', player: { name: 'Vinicius Jr' }, team: { id: 1 } },
-      { time: { elapsed: 38 }, type: 'Card', detail: 'Yellow Card', player: { name: 'De Paul' }, team: { id: 2 } },
-      { time: { elapsed: 45 }, type: 'Goal', detail: 'Normal Goal', player: { name: 'Messi' }, team: { id: 2 } },
-      { time: { elapsed: 56 }, type: 'Goal', detail: 'Normal Goal', player: { name: 'Rodrygo' }, team: { id: 1 } },
-      { time: { elapsed: 62 }, type: 'Card', detail: 'Yellow Card', player: { name: 'Marquinhos' }, team: { id: 1 } },
-    ],
-    lineups: [
-      { team: { id: 1 }, startXI: [
-        { player: { name: 'Alisson', number: 1 } },
-        { player: { name: 'Danilo', number: 2 } },
-        { player: { name: 'Marquinhos', number: 4 } },
-        { player: { name: 'Gabriel M.', number: 14 } },
-        { player: { name: 'Theo H.', number: 6 } },
-        { player: { name: 'Casemiro', number: 5 } },
-        { player: { name: 'Lucas P.', number: 8 } },
-        { player: { name: 'Raphinha', number: 11 } },
-        { player: { name: 'Rodrygo', number: 9 } },
-        { player: { name: 'Paquetá', number: 10 } },
-        { player: { name: 'Vinicius Jr', number: 7 } }
-      ]},
-      { team: { id: 2 }, startXI: [
-        { player: { name: 'E. Martínez', number: 23 } },
-        { player: { name: 'Molina', number: 26 } },
-        { player: { name: 'Romero', number: 13 } },
-        { player: { name: 'Otamendi', number: 19 } },
-        { player: { name: 'Acuña', number: 8 } },
-        { player: { name: 'De Paul', number: 7 } },
-        { player: { name: 'Mac Allister', number: 20 } },
-        { player: { name: 'Enzo F.', number: 24 } },
-        { player: { name: 'Di María', number: 11 } },
-        { player: { name: 'Dybala', number: 21 } },
-        { player: { name: 'Messi', number: 10 } }
-      ]}
-    ]
-  }
-};
-
-const DEMO_STANDINGS = {
-  'A': [
-    { team: { id: 1, name: 'Brazil' }, points: 6, goalsDiff: 4, all: { played: 2, win: 2, draw: 0, lose: 0, goals: { for: 5, against: 1 } }, form: 'WW' },
-    { team: { id: 2, name: 'Argentina' }, points: 3, goalsDiff: 1, all: { played: 2, win: 1, draw: 0, lose: 1, goals: { for: 3, against: 2 } }, form: 'LW' },
-    { team: { id: 10, name: 'Mexico' }, points: 1, goalsDiff: -2, all: { played: 2, win: 0, draw: 1, lose: 1, goals: { for: 1, against: 3 } }, form: 'DL' },
-    { team: { id: 11, name: 'S. Africa' }, points: 1, goalsDiff: -3, all: { played: 2, win: 0, draw: 1, lose: 1, goals: { for: 0, against: 3 } }, form: 'LD' }
-  ],
-  'B': [
-    { team: { id: 3, name: 'France' }, points: 4, goalsDiff: 3, all: { played: 2, win: 1, draw: 1, lose: 0, goals: { for: 4, against: 1 } }, form: 'WD' },
-    { team: { id: 4, name: 'Germany' }, points: 4, goalsDiff: 2, all: { played: 2, win: 1, draw: 1, lose: 0, goals: { for: 3, against: 1 } }, form: 'DW' },
-    { team: { id: 12, name: 'Japan' }, points: 3, goalsDiff: 0, all: { played: 2, win: 1, draw: 0, lose: 1, goals: { for: 2, against: 2 } }, form: 'LW' },
-    { team: { id: 13, name: 'Morocco' }, points: 0, goalsDiff: -5, all: { played: 2, win: 0, draw: 0, lose: 2, goals: { for: 0, against: 5 } }, form: 'LL' }
-  ]
-};
-
-const TEAM_FLAGS = {
-  'Brazil': '🇧🇷', 'Argentina': '🇦🇷', 'France': '🇫🇷', 'Germany': '🇩🇪',
-  'Spain': '🇪🇸', 'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Netherlands': '🇳🇱', 'Portugal': '🇵🇹',
-  'Mexico': '🇲🇽', 'USA': '🇺🇸', 'Canada': '🇨🇦', 'Uruguay': '🇺🇾',
-  'Japan': '🇯🇵', 'South Korea': '🇰🇷', 'Morocco': '🇲🇦', 'Senegal': '🇸🇳',
-  'S. Africa': '🇿🇦', 'South Africa': '🇿🇦', 'Croatia': '🇭🇷', 'Switzerland': '🇨🇭',
-  'Colombia': '🇨🇴', 'Ecuador': '🇪🇨', 'Australia': '🇦🇺', 'Belgium': '🇧🇪',
-  'Poland': '🇵🇱', 'Denmark': '🇩🇰', 'Serbia': '🇷🇸', 'Czech Republic': '🇨🇿',
-  'Chile': '🇨🇱', 'Peru': '🇵🇪', 'Iran': '🇮🇷', 'Saudi Arabia': '🇸🇦',
-};
-const flag = (name) => TEAM_FLAGS[name] || '🏳️';
-
-const VENUES = [
-  { city: 'New York/New Jersey', stadium: 'MetLife Stadium', country: 'USA', flag: '🇺🇸', capacity: '82,500' },
-  { city: 'Los Angeles', stadium: 'SoFi Stadium', country: 'USA', flag: '🇺🇸', capacity: '70,240' },
-  { city: 'Dallas', stadium: 'AT&T Stadium', country: 'USA', flag: '🇺🇸', capacity: '80,000' },
-  { city: 'San Francisco', stadium: 'Levi\'s Stadium', country: 'USA', flag: '🇺🇸', capacity: '68,500' },
-  { city: 'Miami', stadium: 'Hard Rock Stadium', country: 'USA', flag: '🇺🇸', capacity: '64,767' },
-  { city: 'Seattle', stadium: 'Lumen Field', country: 'USA', flag: '🇺🇸', capacity: '72,000' },
-  { city: 'Boston', stadium: 'Gillette Stadium', country: 'USA', flag: '🇺🇸', capacity: '65,878' },
-  { city: 'Philadelphia', stadium: 'Lincoln Financial Field', country: 'USA', flag: '🇺🇸', capacity: '69,328' },
-  { city: 'Kansas City', stadium: 'Arrowhead Stadium', country: 'USA', flag: '🇺🇸', capacity: '76,416' },
-  { city: 'Atlanta', stadium: 'Mercedes-Benz Stadium', country: 'USA', flag: '🇺🇸', capacity: '71,000' },
-  { city: 'Houston', stadium: 'NRG Stadium', country: 'USA', flag: '🇺🇸', capacity: '72,220' },
-  { city: 'Toronto', stadium: 'BMO Field', country: 'Canada', flag: '🇨🇦', capacity: '30,000' },
-  { city: 'Vancouver', stadium: 'BC Place', country: 'Canada', flag: '🇨🇦', capacity: '54,500' },
-  { city: 'Mexico City', stadium: 'Estadio Azteca', country: 'Mexico', flag: '🇲🇽', capacity: '87,500' },
-  { city: 'Guadalajara', stadium: 'Estadio Akron', country: 'Mexico', flag: '🇲🇽', capacity: '49,850' },
-  { city: 'Monterrey', stadium: 'Estadio BBVA', country: 'Mexico', flag: '🇲🇽', capacity: '53,460' },
-];
-
-const POLLS = [
-  { id: 'p1', question: 'Who scores next?', options: ['Home team', 'Away team', 'No more goals'] },
-  { id: 'p2', question: 'Match of the tournament so far?', options: ['BRA vs ARG', 'FRA vs GER', 'ESP vs ENG', 'Other'] },
-  { id: 'p3', question: 'Who lifts the trophy?', options: ['Brazil', 'France', 'Argentina', 'Other'] },
-  { id: 'p4', question: 'Best stadium so far?', options: ['MetLife NJ', 'SoFi LA', 'Azteca CDMX', 'AT&T Dallas'] },
-];
-
-// ── FIREBASE HELPERS ──────────────────────────────────────────────────────────
-let db = null;
-let fbModules = null;
-
-function initFirebase() {
-  if (db) return db;
-  try {
-    fbModules = window.__firebaseModules;
-    const app = fbModules.initializeApp(FIREBASE_CONFIG);
-    db = fbModules.getDatabase(app);
-    return db;
-  } catch(e) {
-    console.warn('Firebase not configured, running in local mode');
-    return null;
-  }
+function proxyUrl(path) {
+  return `${WORKER_URL}/?url=${encodeURIComponent('https://v3.football.api-sports.io/' + path)}`;
 }
 
-// ── API HELPERS ──────────────────────────────────────────────────────────────
-function proxyUrl(apiPath) {
-  return `${WORKER_URL}/?url=${encodeURIComponent('https://v3.football.api-sports.io/' + apiPath)}`;
-}
-
-async function fetchFixtures() {
-  const season = SEASON;
-  // For 2026 use next=20, for past seasons use last=20
-  const param = season >= 2026 ? 'next=20' : 'last=20';
-  const r = await fetch(proxyUrl(`fixtures?league=${LEAGUE_ID}&season=${season}&${param}`));
+async function apiGet(path) {
+  const r = await fetch(proxyUrl(path));
   const d = await r.json();
   return d.response || [];
 }
 
-async function fetchLiveFixtures() {
-  const r = await fetch(proxyUrl(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&status=1H-HT-2H-ET-P-BT-LIVE`));
-  const d = await r.json();
-  return d.response || [];
+// ── FLAG SVGs ─────────────────────────────────────────────────────────────────
+const FLAG_SVGS = {
+  MEX: () => <><rect width="12" height="24" fill="#006847"/><rect x="12" width="12" height="24" fill="#fff"/><rect x="24" width="12" height="24" fill="#ce1126"/><circle cx="18" cy="12" r="2.2" fill="none" stroke="#8b4513" strokeWidth="0.5"/></>,
+  CAN: () => <><rect width="9" height="24" fill="#d52b1e"/><rect x="9" width="18" height="24" fill="#fff"/><rect x="27" width="9" height="24" fill="#d52b1e"/><path d="M18 6L19 9L22 8.5L20 11L22.5 13L19.5 13L20 16L18 14L16 16L16.5 13L13.5 13L16 11L14 8.5L17 9Z" fill="#d52b1e"/></>,
+  USA: () => <>{Array.from({length:13}).map((_,i)=><rect key={i} y={i*(24/13)} width="36" height={24/13} fill={i%2===0?'#b22234':'#fff'}/>)}<rect width="15" height={24*7/13} fill="#3c3b6e"/></>,
+  JPN: () => <><rect width="36" height="24" fill="#fff"/><circle cx="18" cy="12" r="6" fill="#bc002d"/></>,
+  BRA: () => <><rect width="36" height="24" fill="#009c3b"/><polygon points="18,3 33,12 18,21 3,12" fill="#ffdf00"/><circle cx="18" cy="12" r="4.5" fill="#002776"/></>,
+  ARG: () => <><rect width="36" height="8" fill="#74acdf"/><rect y="8" width="36" height="8" fill="#fff"/><rect y="16" width="36" height="8" fill="#74acdf"/><circle cx="18" cy="12" r="1.8" fill="#f6b40e"/></>,
+  GER: () => <><rect width="36" height="8" fill="#000"/><rect y="8" width="36" height="8" fill="#dd0000"/><rect y="16" width="36" height="8" fill="#ffce00"/></>,
+  ESP: () => <><rect width="36" height="6" fill="#aa151b"/><rect y="6" width="36" height="12" fill="#f1bf00"/><rect y="18" width="36" height="6" fill="#aa151b"/></>,
+  FRA: () => <><rect width="12" height="24" fill="#002395"/><rect x="12" width="12" height="24" fill="#fff"/><rect x="24" width="12" height="24" fill="#ed2939"/></>,
+  ENG: () => <><rect width="36" height="24" fill="#fff"/><rect x="15" width="6" height="24" fill="#ce1124"/><rect y="9" width="36" height="6" fill="#ce1124"/></>,
+  NED: () => <><rect width="36" height="8" fill="#ae1c28"/><rect y="8" width="36" height="8" fill="#fff"/><rect y="16" width="36" height="8" fill="#21468b"/></>,
+  POR: () => <><rect width="14" height="24" fill="#046a38"/><rect x="14" width="22" height="24" fill="#da291c"/><circle cx="14" cy="12" r="3.5" fill="#fff"/></>,
+  ITA: () => <><rect width="12" height="24" fill="#009246"/><rect x="12" width="12" height="24" fill="#fff"/><rect x="24" width="12" height="24" fill="#ce2b37"/></>,
+  CRO: () => <><rect width="36" height="12" fill="#ff0000"/><rect y="12" width="36" height="12" fill="#fff"/><rect y="8" width="36" height="8" fill="#fff"/></>,
+  MAR: () => <><rect width="36" height="24" fill="#c1272d"/><polygon points="18,8 19.2,12 23,12 20,14 21.2,18 18,16 14.8,18 16,14 13,12 16.8,12" fill="none" stroke="#006233" strokeWidth="0.8"/></>,
+  SEN: () => <><rect width="12" height="24" fill="#00853f"/><rect x="12" width="12" height="24" fill="#fdef42"/><rect x="24" width="12" height="24" fill="#e31b23"/><polygon points="18,8 19,11 22,11 19.5,13 20.5,16 18,14 15.5,16 16.5,13 14,11 17,11" fill="#00853f"/></>,
+  AUS: () => <><rect width="36" height="24" fill="#00008b"/><rect width="18" height="12" fill="#012169"/><rect x="6" width="6" height="12" fill="#fff"/><rect y="4" width="18" height="4" fill="#fff"/><rect x="7" width="4" height="12" fill="#cc142b"/><rect y="5" width="18" height="2" fill="#cc142b"/></>,
+  KOR: () => <><rect width="36" height="24" fill="#fff"/><circle cx="18" cy="12" r="5" fill="#cd2e3a"/><path d="M18 7 A5 5 0 0 1 18 17" fill="#003478"/></>,
+  __default: () => <><rect width="36" height="24" fill="#262b35"/><rect x="15" width="6" height="24" fill="#30363f"/><rect y="9" width="36" height="6" fill="#30363f"/></>,
+};
+
+function Flag({ code, size = 36 }) {
+  const W = 36, H = 24;
+  const h = Math.round(size * (H/W));
+  const svgContent = FLAG_SVGS[code] || FLAG_SVGS.__default;
+  return (
+    <svg width={size} height={h} viewBox="0 0 36 24" preserveAspectRatio="xMidYMid slice"
+      style={{display:'block',flexShrink:0}}>
+      {svgContent()}
+    </svg>
+  );
 }
 
-async function fetchFixtureStats(id) {
-  const [statsR, eventsR, lineupsR] = await Promise.all([
-    fetch(proxyUrl(`fixtures/statistics?fixture=${id}`)),
-    fetch(proxyUrl(`fixtures/events?fixture=${id}`)),
-    fetch(proxyUrl(`fixtures/lineups?fixture=${id}`)),
+function TeamBlock({ code, size = 36 }) {
+  const h = Math.round(size * (2/3));
+  return (
+    <div style={{width:size, height:h, overflow:'hidden', flexShrink:0,
+      border:'1px solid rgba(255,255,255,0.12)',
+      boxShadow:'0 1px 2px rgba(0,0,0,0.4)', background:'#000'}}>
+      <Flag code={code} size={size}/>
+    </div>
+  );
+}
+
+// ── API helpers: extract 3-letter code from team name ────────────────────────
+function teamCode(name) {
+  const map = {
+    'France':'FRA','England':'ENG','Netherlands':'NED','Portugal':'POR',
+    'Brazil':'BRA','Argentina':'ARG','Germany':'GER','Spain':'ESP',
+    'Croatia':'CRO','Morocco':'MAR','Senegal':'SEN','Australia':'AUS',
+    'Japan':'JPN','South Korea':'KOR','Mexico':'MEX','USA':'USA',
+    'Canada':'CAN','Italy':'ITA','Belgium':'BEL','Uruguay':'URU',
+    'Denmark':'DEN','Switzerland':'SUI','Poland':'POL','Serbia':'SRB',
+    'Ecuador':'ECU','Ghana':'GHA','Cameroon':'CMR','Tunisia':'TUN',
+    'Wales':'WAL','Qatar':'QAT','Saudi Arabia':'KSA','Iran':'IRN',
+    'Czech Republic':'CZE','South Africa':'RSA','Bosnia & Herzegovina':'BIH',
+    'Paraguay':'PAR','Switzerland':'SUI',
+  };
+  return map[name] || name.slice(0,3).toUpperCase();
+}
+
+// ── Primitives ────────────────────────────────────────────────────────────────
+function LiveTag({ min }) {
+  return (
+    <div style={{display:'inline-flex',alignItems:'center',gap:6,
+      background:'color-mix(in oklch, var(--acc-red) 15%, transparent)',
+      border:'1px solid color-mix(in oklch, var(--acc-red) 40%, transparent)',
+      padding:'3px 8px',
+      fontFamily:'var(--f-mono)',fontSize:10,fontWeight:700,
+      color:'var(--acc-red)',letterSpacing:'0.1em',textTransform:'uppercase'}}>
+      <span className="live-dot"/>
+      LIVE{min != null ? ` · ${min}'` : ''}
+    </div>
+  );
+}
+
+function StatusTag({ status, time }) {
+  const label = status === 'FT' ? 'FT' : status === 'HT' ? 'HT' : status === 'PEN' ? 'PEN' : time || status;
+  return (
+    <span className="mono caps" style={{fontSize:10,fontWeight:700,letterSpacing:'0.12em',
+      color:'var(--ink-2)',padding:'3px 8px',
+      border:'1px solid var(--line-strong)'}}>
+      {label}
+    </span>
+  );
+}
+
+function SectionHeader({ label, num, action }) {
+  return (
+    <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',
+      padding:'20px 16px 10px'}}>
+      <div style={{display:'flex',alignItems:'baseline',gap:8}}>
+        {num !== undefined && (
+          <span className="mono" style={{fontSize:10,color:'var(--ink-3)'}}>
+            {String(num).padStart(2,'0')} /
+          </span>
+        )}
+        <span className="caps mono" style={{fontSize:11,fontWeight:600,
+          color:'var(--ink-1)',letterSpacing:'0.14em'}}>{label}</span>
+      </div>
+      {action && <span className="caps mono" style={{fontSize:10,color:'var(--ink-2)'}}>{action} →</span>}
+    </div>
+  );
+}
+
+function HudCorners({ children, style }) {
+  const tick = {position:'absolute',width:8,height:8,
+    borderColor:'var(--ink-3)',borderStyle:'solid',borderWidth:0};
+  return (
+    <div style={{position:'relative',...style}}>
+      <span style={{...tick,top:0,left:0,borderTopWidth:1,borderLeftWidth:1}}/>
+      <span style={{...tick,top:0,right:0,borderTopWidth:1,borderRightWidth:1}}/>
+      <span style={{...tick,bottom:0,left:0,borderBottomWidth:1,borderLeftWidth:1}}/>
+      <span style={{...tick,bottom:0,right:0,borderBottomWidth:1,borderRightWidth:1}}/>
+      {children}
+    </div>
+  );
+}
+
+function XgBar({ h, a }) {
+  const total = h + a || 1;
+  return (
+    <div style={{display:'flex',height:3,background:'var(--bg-3)'}}>
+      <div style={{width:`${(h/total)*100}%`,background:'var(--acc-red)'}}/>
+      <div style={{flex:1,background:'var(--acc-grn-d)'}}/>
+    </div>
+  );
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+function fmtKO(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDateShort(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString([],{month:'short',day:'numeric'}).toUpperCase();
+}
+function isLiveStatus(s) {
+  return ['1H','2H','HT','ET','BT','P','LIVE'].includes(s);
+}
+function isFTStatus(s) {
+  return ['FT','AET','PEN'].includes(s);
+}
+
+// ── API fetch functions ───────────────────────────────────────────────────────
+async function fetchMatches() {
+  const param = SEASON >= 2026 ? 'next=20' : 'last=20';
+  return apiGet(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&${param}`);
+}
+async function fetchLive() {
+  return apiGet(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&status=1H-HT-2H-ET-P-BT-LIVE`);
+}
+async function fetchMatchDetail(id) {
+  const [stats, events, lineups] = await Promise.all([
+    apiGet(`fixtures/statistics?fixture=${id}`),
+    apiGet(`fixtures/events?fixture=${id}`),
+    apiGet(`fixtures/lineups?fixture=${id}`),
   ]);
-  const [stats, events, lineups] = await Promise.all([statsR.json(), eventsR.json(), lineupsR.json()]);
-  return { statistics: stats.response, events: events.response, lineups: lineups.response };
+  return { stats, events, lineups };
 }
-
 async function fetchStandings() {
-  const r = await fetch(proxyUrl(`standings?league=${LEAGUE_ID}&season=${SEASON}`));
-  const d = await r.json();
+  const res = await apiGet(`standings?league=${LEAGUE_ID}&season=${SEASON}`);
   const groups = {};
-  (d.response?.[0]?.league?.standings || []).forEach((grp, i) => {
+  (res[0]?.league?.standings || []).forEach((grp,i) => {
     groups[String.fromCharCode(65+i)] = grp;
   });
   return groups;
 }
 
-// ── COUNTDOWN ────────────────────────────────────────────────────────────────
-function useCountdown(target) {
-  const [diff, setDiff] = useState(() => target - Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setDiff(target - Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [target]);
-  const d = Math.max(0, Math.floor(diff / 86400000));
-  const h = Math.max(0, Math.floor((diff % 86400000) / 3600000));
-  const m = Math.max(0, Math.floor((diff % 3600000) / 60000));
-  const s = Math.max(0, Math.floor((diff % 60000) / 1000));
-  return { d, h, m, s };
-}
-
-// ── FORMAT HELPERS ───────────────────────────────────────────────────────────
-function fmtTime(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-function fmtDate(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-// ── ROOM CODE ────────────────────────────────────────────────────────────────
-function getRoomCode() {
-  let code = localStorage.getItem('wc26_room');
-  if (!code) {
-    code = Math.random().toString(36).slice(2,8).toUpperCase();
-    localStorage.setItem('wc26_room', code);
-  }
-  return code;
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// COMPONENTS
-// ══════════════════════════════════════════════════════════════════════════════
-
-function SetupModal({ onDone }) {
-  const [name, setName] = useState('');
-  return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <div style={{fontSize:48,textAlign:'center',marginBottom:12}}>⚽</div>
-        <h2>Welcome to WC26</h2>
-        <p>Your World Cup 2026 companion for live scores, predictions, and match battles with friends.</p>
-        <input
-          className="text-input"
-          placeholder="Your name (visible to friends)"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && name.trim() && onDone(name.trim())}
-          autoFocus
-        />
-        <button
-          className="btn btn-gold btn-full"
-          disabled={!name.trim()}
-          onClick={() => onDone(name.trim())}
-          style={{opacity: name.trim() ? 1 : 0.5}}
-        >
-          Let's go →
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ConfigCard() {
-  return null; // Worker is configured, no setup needed
-}
-
-// ── NAV ICONS ────────────────────────────────────────────────────────────────
-const icons = {
-  home: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-  live: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-  table: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>,
-  predict: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-  battle: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
-  info: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+// ── NAV ICONS ─────────────────────────────────────────────────────────────────
+const NAV_ICONS = {
+  home: c => <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 10L11 3l8 7v9H3v-9z" stroke={c} strokeWidth="1.4"/><path d="M9 19v-5h4v5" stroke={c} strokeWidth="1.4"/></svg>,
+  standings: c => <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="3" stroke={c} strokeWidth="1.4"/><rect x="3" y="9.5" width="16" height="3" stroke={c} strokeWidth="1.4"/><rect x="3" y="15" width="16" height="3" stroke={c} strokeWidth="1.4"/></svg>,
+  bracket: c => <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 5h4v4h4v4H7v4H3" stroke={c} strokeWidth="1.4" fill="none"/><path d="M19 5h-4v4h-4" stroke={c} strokeWidth="1.4" fill="none"/><path d="M19 17h-4v-4" stroke={c} strokeWidth="1.4" fill="none"/></svg>,
+  predict: c => <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><polygon points="11 2 13.5 8 20 8.5 15 13 16.5 19.5 11 16.5 5.5 19.5 7 13 2 8.5 8.5 8" stroke={c} strokeWidth="1.4" fill="none"/></svg>,
+  more: c => <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="7" height="7" stroke={c} strokeWidth="1.4"/><rect x="12" y="4" width="7" height="7" stroke={c} strokeWidth="1.4"/><rect x="3" y="13" width="7" height="7" stroke={c} strokeWidth="1.4"/><rect x="12" y="13" width="7" height="7" stroke={c} strokeWidth="1.4"/></svg>,
 };
 
-// ── HOME TAB ─────────────────────────────────────────────────────────────────
-function HomeTab({ matches, username, roomCode, onCopyRoom }) {
-  const wc2026Start = new Date('2026-06-11T19:00:00Z').getTime();
-  const { d, h, m, s } = useCountdown(wc2026Start);
-  const isStarted = Date.now() > wc2026Start;
-  const isTesting = SEASON === 2022;
-  const live = matches.filter(x => x.fixture.status.short === 'LIVE' || x.fixture.status.short === '1H' || x.fixture.status.short === '2H' || x.fixture.status.short === 'HT');
-  const upcoming = matches.filter(x => x.fixture.status.short === 'NS').slice(0, 3);
-  const recent = matches.filter(x => ['FT','AET','PEN'].includes(x.fixture.status.short)).slice(0, 2);
+const TABS = [
+  {k:'home', l:'HOME', idx:1},
+  {k:'standings', l:'TABLES', idx:2},
+  {k:'predict', l:'PREDICT', idx:3},
+  {k:'battle', l:'BATTLE', idx:4},
+  {k:'more', l:'MORE', idx:5},
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// HOME SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
+function HomeScreen({ matches, onMatchTap }) {
+  const live = matches.filter(m => isLiveStatus(m.fixture.status.short));
+  const upcoming = matches.filter(m => m.fixture.status.short === 'NS').slice(0,5);
+  const results = matches.filter(m => isFTStatus(m.fixture.status.short)).slice(0,8);
+  const all = [...live, ...upcoming, ...results];
+
+  const wc2026 = new Date('2026-06-11T19:00:00Z');
+  const isTesting = SEASON < 2026;
 
   return (
-    <div className="fade-in">
-      {isTesting && (
-        <div style={{background:'rgba(61,139,255,0.15)',border:'1px solid rgba(61,139,255,0.3)',borderRadius:10,padding:'8px 14px',marginBottom:10,fontSize:12,color:'var(--blue)'}}>
-          🧪 Testing with Qatar 2022 data — switches to 2026 in June
+    <div className="screen-enter screen-scroll">
+      {/* Header */}
+      <div style={{padding:`calc(var(--safe-top) + 16px) 16px 12px`,
+        borderBottom:'1px solid var(--line)',background:'var(--bg-1)',
+        position:'sticky',top:0,zIndex:20}}>
+        <div className="mono caps" style={{fontSize:9,color:'var(--ink-3)',
+          letterSpacing:'0.18em',marginBottom:4}}>
+          FIFA WORLD CUP · USA · CAN · MEX
         </div>
-      )}
-      <div className="hero">
-        <div className="eyebrow">FIFA WORLD CUP 2026</div>
-        <h1>USA · CANADA<br/>MEXICO</h1>
-        {isStarted ? (
-          <div style={{marginTop:8}}>
-            <div style={{fontSize:13,color:'var(--green)',fontWeight:600}}>🟢 Tournament in progress</div>
-            <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>Jun 11 – Jul 19, 2026 • 48 teams • 104 matches</div>
-          </div>
-        ) : (
-          <>
-            <div className="countdown">{String(d).padStart(2,'0')}:{String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}</div>
-            <div className="countdown-label">DAYS · HRS · MIN · SEC</div>
-            <div style={{fontSize:12,color:'var(--muted)',marginTop:8}}>Jun 11 – Jul 19 • 48 teams • 104 matches</div>
-          </>
-        )}
-      </div>
-
-      <div className="room-banner" onClick={onCopyRoom}>
-        <div>
-          <div className="room-label">Your group room code</div>
-          <div className="room-code">{roomCode}</div>
-        </div>
-        <div className="copy-hint">Tap to copy link 📋</div>
-      </div>
-
-      <ConfigCard />
-
-      {live.length > 0 && (
-        <>
-          <div className="card-header">
-            <div className="section-title">⚡ Live Now</div>
-            <span className="badge badge-live">Live</span>
-          </div>
-          {live.map(m => <CompactMatchCard key={m.fixture.id} match={m} />)}
-        </>
-      )}
-
-      {upcoming.length > 0 && (
-        <>
-          <div className="card-header" style={{marginTop:4}}>
-            <div className="section-title">🗓 Upcoming</div>
-          </div>
-          {upcoming.map(m => <CompactMatchCard key={m.fixture.id} match={m} />)}
-        </>
-      )}
-
-      {recent.length > 0 && (
-        <>
-          <div className="card-header" style={{marginTop:4}}>
-            <div className="section-title">✅ Recent Results</div>
-          </div>
-          {recent.map(m => <CompactMatchCard key={m.fixture.id} match={m} />)}
-        </>
-      )}
-    </div>
-  );
-}
-
-// ── COMPACT MATCH CARD ────────────────────────────────────────────────────────
-function CompactMatchCard({ match: m, onClick }) {
-  const isLive = ['LIVE','1H','2H','HT','ET','BT','P'].includes(m.fixture.status.short);
-  const isFT = ['FT','AET','PEN'].includes(m.fixture.status.short);
-  const isNS = m.fixture.status.short === 'NS';
-  return (
-    <div className={`match-card ${isLive ? 'active-match' : ''}`} onClick={onClick}>
-      <div className="match-teams">
-        <div className="team-side">
-          <span className="team-flag">{flag(m.teams.home.name)}</span>
-          <span className="team-name">{m.teams.home.name}</span>
-        </div>
-        <div className="match-score">
-          {isNS ? (
-            <span style={{fontSize:14,color:'var(--muted)',fontFamily:'var(--font-body)',fontWeight:600}}>
-              {fmtTime(m.fixture.date)}
-            </span>
-          ) : (
-            <>
-              <span style={{color: isLive ? 'var(--gold)' : 'var(--text)'}}>{m.goals.home ?? 0}</span>
-              <span className="score-sep">–</span>
-              <span style={{color: isLive ? 'var(--gold)' : 'var(--text)'}}>{m.goals.away ?? 0}</span>
-            </>
-          )}
-        </div>
-        <div className="team-side right">
-          <span className="team-name">{m.teams.away.name}</span>
-          <span className="team-flag">{flag(m.teams.away.name)}</span>
-        </div>
-      </div>
-      <div className="match-meta">
-        <span>{m.league.round}</span>
-        {isLive && <span><span className="live-dot"/>LIVE {m.fixture.status.elapsed}'</span>}
-        {isFT && <span>Full Time</span>}
-        {isNS && <span>{fmtDate(m.fixture.date)}</span>}
-        <span style={{fontSize:11}}>{m.fixture.venue?.city}</span>
-      </div>
-    </div>
-  );
-}
-
-// ── LIVE TAB ─────────────────────────────────────────────────────────────────
-function LiveTab({ matches }) {
-  const [selected, setSelected] = useState(null);
-  const [detail, setDetail] = useState(null);
-  const [activeTab, setActiveTab] = useState('stats');
-  const [loading, setLoading] = useState(false);
-
-  const live = matches.filter(x => ['LIVE','1H','2H','HT','ET','BT','P'].includes(x.fixture.status.short));
-  const upcoming = matches.filter(x => x.fixture.status.short === 'NS');
-  const recent = matches.filter(x => ['FT','AET','PEN'].includes(x.fixture.status.short));
-
-  const selectMatch = async (m) => {
-    setSelected(m);
-    setLoading(true);
-    setDetail(null);
-    try {
-      const d = await fetchFixtureStats(m.fixture.id);
-      setDetail(d);
-    } catch(e) { console.error(e); }
-    finally { setLoading(false); }
-  };
-
-  const getStat = (stats, teamId, type) => {
-    const teamStats = stats?.find(s => s.team.id === teamId)?.statistics || [];
-    const s = teamStats.find(x => x.type === type);
-    return s?.value || '0';
-  };
-
-  if (selected) {
-    const m = selected;
-    const isLive = ['LIVE','1H','2H','HT','ET','BT','P'].includes(m.fixture.status.short);
-    const hId = m.teams.home.id;
-    const aId = m.teams.away.id;
-
-    const statRows = [
-      'Ball Possession', 'Total Shots', 'Shots on Goal', 'Corner Kicks', 'Yellow Cards', 'Fouls'
-    ];
-
-    const parseVal = v => parseInt(String(v).replace('%','')) || 0;
-
-    const events = detail?.events || [];
-    const lineups = detail?.lineups || [];
-    const hLineup = lineups.find(l => l.team.id === hId)?.startXI || [];
-    const aLineup = lineups.find(l => l.team.id === aId)?.startXI || [];
-
-    return (
-      <div className="fade-in">
-        <button className="btn btn-outline btn-sm" onClick={() => setSelected(null)} style={{marginBottom:12}}>
-          ← Back
-        </button>
-
-        <div className="card" style={{marginBottom:12}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-            {isLive && <span className="badge badge-live"><span className="live-dot"/>{m.fixture.status.elapsed}'</span>}
-            <span style={{fontSize:12,color:'var(--muted)'}}>{m.league.round} • {m.fixture.venue?.city}</span>
-          </div>
-          <div className="match-teams">
-            <div className="team-side">
-              <span className="team-flag">{flag(m.teams.home.name)}</span>
-              <span className="team-name">{m.teams.home.name}</span>
-            </div>
-            <div className="match-score" style={{fontSize:40}}>
-              <span>{m.goals.home ?? 0}</span>
-              <span className="score-sep">–</span>
-              <span>{m.goals.away ?? 0}</span>
-            </div>
-            <div className="team-side right">
-              <span className="team-name">{m.teams.away.name}</span>
-              <span className="team-flag">{flag(m.teams.away.name)}</span>
+        <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between'}}>
+          <div style={{display:'flex',alignItems:'baseline',gap:10}}>
+            <div className="chunky" style={{fontSize:30,color:'var(--ink-0)',lineHeight:0.9}}>26</div>
+            <div className="mono" style={{fontSize:11,color:'var(--ink-2)',letterSpacing:'0.1em'}}>
+              {isTesting ? 'QATAR 2022 · TEST MODE' : 'MATCHDAY / 48 TEAMS'}
             </div>
           </div>
-          {m.score.halftime.home !== null && (
-            <div style={{textAlign:'center',marginTop:8,fontSize:12,color:'var(--muted)'}}>
-              HT: {m.score.halftime.home}–{m.score.halftime.away}
+          <div style={{textAlign:'right'}}>
+            <div className="mono" style={{fontSize:10,color:'var(--ink-3)'}}>
+              {new Date().toLocaleDateString([],{weekday:'short',day:'2-digit',month:'short'}).toUpperCase()}
             </div>
-          )}
-        </div>
-
-        <div className="tabs">
-          {['stats','events','lineups'].map(t => (
-            <div key={t} className={`tab ${activeTab===t?'active':''}`} onClick={() => setActiveTab(t)}>
-              {t.charAt(0).toUpperCase()+t.slice(1)}
-            </div>
-          ))}
-        </div>
-
-        {loading && <div className="spinner"/>}
-
-        {!loading && activeTab === 'stats' && detail?.statistics && (
-          <div className="card">
-            {statRows.map(type => {
-              const hv = parseVal(getStat(detail.statistics, hId, type));
-              const av = parseVal(getStat(detail.statistics, aId, type));
-              const total = hv + av || 1;
-              return (
-                <div key={type} className="stat-row">
-                  <div className="stat-val">{getStat(detail.statistics, hId, type)}</div>
-                  <div style={{flex:1}}>
-                    <div style={{textAlign:'center',fontSize:11,color:'var(--muted)',marginBottom:3}}>{type}</div>
-                    <div style={{display:'flex',height:6,borderRadius:3,overflow:'hidden',background:'var(--bg3)'}}>
-                      <div className="stat-bar home" style={{width:`${(hv/total)*100}%`}}/>
-                      <div className="stat-bar away" style={{width:`${(av/total)*100}%`}}/>
-                    </div>
-                  </div>
-                  <div className="stat-val">{getStat(detail.statistics, aId, type)}</div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {!loading && activeTab === 'events' && (
-          <div className="card">
-            <div className="event-feed">
-              {events.length === 0 && <div style={{textAlign:'center',color:'var(--muted)',padding:'20px 0',fontSize:13}}>No events yet</div>}
-              {[...events].reverse().map((ev, i) => (
-                <div key={i} className="event-item">
-                  <div className="event-min">{ev.time.elapsed}'</div>
-                  <div className="event-icon">
-                    {ev.type === 'Goal' ? '⚽' : ev.detail === 'Yellow Card' ? '🟨' : ev.detail === 'Red Card' ? '🟥' : ev.type === 'subst' ? '🔄' : '📋'}
-                  </div>
-                  <div className="event-text">
-                    <span className="player">{ev.player?.name}</span>
-                    {ev.type === 'Goal' && <span style={{color:'var(--muted)',fontSize:12}}> ({ev.detail})</span>}
-                  </div>
-                  <div style={{fontSize:11,color:'var(--muted)'}}>
-                    {ev.team.id === hId ? m.teams.home.name.split(' ').pop() : m.teams.away.name.split(' ').pop()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!loading && activeTab === 'lineups' && (
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            {[{team: m.teams.home, lineup: hLineup},{team: m.teams.away, lineup: aLineup}].map(({team,lineup}) => (
-              <div key={team.id} className="card">
-                <div style={{textAlign:'center',marginBottom:10}}>
-                  <span style={{fontSize:20}}>{flag(team.name)}</span>
-                  <div style={{fontFamily:'var(--font-display)',fontSize:14,marginTop:4}}>{team.name}</div>
-                </div>
-                {lineup.map((p,i) => (
-                  <div key={i} style={{display:'flex',gap:8,alignItems:'center',padding:'5px 0',borderTop: i ? '1px solid var(--border)':undefined,fontSize:12}}>
-                    <span style={{width:20,textAlign:'center',color:'var(--muted)',fontWeight:700}}>{p.player.number}</span>
-                    <span>{p.player.name}</span>
-                  </div>
-                ))}
+            {live.length > 0 && (
+              <div className="mono" style={{fontSize:10,color:'var(--acc-red)',marginTop:2,
+                display:'flex',alignItems:'center',gap:4,justifyContent:'flex-end'}}>
+                <span className="live-dot" style={{width:6,height:6}}/>{live.length} LIVE
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="fade-in">
-      {live.length > 0 && (
-        <>
-          <div className="card-header">
-            <div className="section-title">⚡ Live Matches</div>
-            <span className="badge badge-live">Live</span>
+      {/* Live board / ticker */}
+      {all.length > 0 ? (
+        <div style={{background:'var(--bg-0)',borderBottom:'1px solid var(--line)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',
+            padding:'10px 16px 8px'}}>
+            <div className="caps mono" style={{fontSize:10,color:'var(--ink-1)',letterSpacing:'0.14em'}}>
+              {live.length > 0
+                ? <><span style={{color:'var(--acc-red)'}}>●</span> LIVE BOARD</>
+                : '● MATCH BOARD'}
+            </div>
+            <div className="mono" style={{fontSize:10,color:'var(--ink-3)'}}>‹ SWIPE ›</div>
           </div>
-          {live.map(m => <CompactMatchCard key={m.fixture.id} match={m} onClick={() => selectMatch(m)}/>)}
-        </>
+          <div style={{display:'flex',overflowX:'auto',scrollSnapType:'x mandatory',
+            scrollbarWidth:'none',paddingBottom:16}}>
+            {all.map((m,i) => <TickerCard key={m.fixture.id} m={m} idx={i} total={all.length} onTap={onMatchTap}/>)}
+          </div>
+        </div>
+      ) : (
+        <div style={{padding:'40px 16px',textAlign:'center'}}>
+          <div className="spinner"/>
+          <div className="mono" style={{fontSize:11,color:'var(--ink-3)',letterSpacing:'0.1em',marginTop:8}}>
+            LOADING FIXTURES...
+          </div>
+        </div>
       )}
+
+      {/* Upcoming section */}
       {upcoming.length > 0 && (
         <>
-          <div className="card-header" style={{marginTop:4}}>
-            <div className="section-title">🗓 Upcoming</div>
+          <SectionHeader num={2} label="NEXT UP" action="ALL FIXTURES"/>
+          <div style={{padding:'0 16px'}}>
+            {upcoming.map((m,i) => <UpcomingRow key={m.fixture.id} m={m} onTap={onMatchTap}/>)}
           </div>
-          {upcoming.map(m => <CompactMatchCard key={m.fixture.id} match={m} onClick={() => selectMatch(m)}/>)}
         </>
       )}
-      {recent.length > 0 && (
+
+      {/* Results */}
+      {results.length > 0 && (
         <>
-          <div className="card-header" style={{marginTop:4}}>
-            <div className="section-title">✅ Results</div>
+          <SectionHeader num={3} label="RECENT RESULTS"/>
+          <div style={{padding:'0 16px'}}>
+            {results.slice(0,5).map((m,i) => <ResultRow key={m.fixture.id} m={m} onTap={onMatchTap}/>)}
           </div>
-          {recent.map(m => <CompactMatchCard key={m.fixture.id} match={m} onClick={() => selectMatch(m)}/>)}
         </>
       )}
-      {matches.length === 0 && (
-        <div className="empty">
-          <div className="big">🕐</div>
-          <h3>No matches yet</h3>
-          <p>Tournament kicks off June 11, 2026.<br/>Check back then for live data!</p>
+
+      <div style={{height:16}}/>
+    </div>
+  );
+}
+
+function TickerCard({ m, idx, total, onTap }) {
+  const isLive = isLiveStatus(m.fixture.status.short);
+  const isFT = isFTStatus(m.fixture.status.short);
+  const hCode = teamCode(m.teams.home.name);
+  const aCode = teamCode(m.teams.away.name);
+  return (
+    <div onClick={() => onTap(m)}
+      style={{minWidth:280,flexShrink:0,scrollSnapAlign:'start',
+        padding:'8px 16px 22px',
+        borderRight:'1px dashed var(--line-strong)',
+        position:'relative',cursor:'pointer'}}>
+      <div className="mono" style={{position:'absolute',top:8,right:16,
+        fontSize:9,color:'var(--ink-3)',letterSpacing:'0.15em'}}>
+        {String(idx+1).padStart(2,'0')}/{String(total).padStart(2,'0')}
+      </div>
+      <div style={{marginBottom:12}}>
+        {isLive
+          ? <LiveTag min={m.fixture.status.elapsed}/>
+          : isFT
+          ? <StatusTag status={m.fixture.status.short}/>
+          : <StatusTag status="UP" time={`${fmtDateShort(m.fixture.date)} · ${fmtKO(m.fixture.date)}`}/>}
+      </div>
+      <TickerTeamRow code={hCode} name={m.teams.home.name}
+        score={m.goals.home} showScore={isLive||isFT}
+        leading={isLive && m.goals.home > m.goals.away}/>
+      <div style={{height:8}}/>
+      <TickerTeamRow code={aCode} name={m.teams.away.name}
+        score={m.goals.away} showScore={isLive||isFT}
+        leading={isLive && m.goals.away > m.goals.home}/>
+      <div className="mono" style={{marginTop:14,fontSize:10,
+        color:'var(--ink-3)',letterSpacing:'0.05em'}}>
+        {m.league.round?.replace('Group Stage - ','GS ') || ''} · {m.fixture.venue?.city || ''}
+      </div>
+    </div>
+  );
+}
+
+function TickerTeamRow({ code, name, score, showScore, leading }) {
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:12}}>
+      <TeamBlock code={code} size={32}/>
+      <div style={{flex:1,minWidth:0}}>
+        <div className="mono" style={{fontSize:15,fontWeight:700,
+          color:leading?'var(--ink-0)':'var(--ink-1)',letterSpacing:'-0.01em'}}>
+          {code}
         </div>
+        <div className="mono" style={{fontSize:10,color:'var(--ink-3)',marginTop:1}}>
+          {name.toUpperCase()}
+        </div>
+      </div>
+      {showScore && (
+        <div className="chunky" style={{fontSize:32,lineHeight:1,
+          color:leading?'var(--ink-0)':'var(--ink-2)'}}>{score ?? 0}</div>
       )}
     </div>
   );
 }
 
-// ── STANDINGS TAB ─────────────────────────────────────────────────────────────
-function StandingsTab() {
-  const [standings, setStandings] = useState({});
-  const [activeGroup, setActiveGroup] = useState('A');
+function UpcomingRow({ m, onTap }) {
+  const hCode = teamCode(m.teams.home.name);
+  const aCode = teamCode(m.teams.away.name);
+  return (
+    <div onClick={() => onTap(m)}
+      style={{display:'grid',gridTemplateColumns:'60px 1fr auto',gap:12,
+        alignItems:'center',padding:'12px 0',
+        borderTop:'1px solid var(--line)',cursor:'pointer'}}>
+      <div>
+        <div className="chunky" style={{fontSize:18,color:'var(--ink-0)',lineHeight:1}}>
+          {fmtKO(m.fixture.date)}
+        </div>
+        <div className="mono" style={{fontSize:9,color:'var(--ink-3)',
+          letterSpacing:'0.1em',marginTop:3}}>
+          {fmtDateShort(m.fixture.date)}
+        </div>
+        <div className="mono" style={{fontSize:9,color:'var(--ink-3)',marginTop:2}}>
+          {m.league.round?.replace('Group Stage - ','GS ')?.replace('Group Stage','GS') || ''}
+        </div>
+      </div>
+      <div>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+          <TeamBlock code={hCode} size={20}/>
+          <span className="mono" style={{fontSize:13,fontWeight:700}}>{hCode}</span>
+          <span className="mono" style={{fontSize:11,color:'var(--ink-3)'}}>
+            {m.teams.home.name}
+          </span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <TeamBlock code={aCode} size={20}/>
+          <span className="mono" style={{fontSize:13,fontWeight:700}}>{aCode}</span>
+          <span className="mono" style={{fontSize:11,color:'var(--ink-3)'}}>
+            {m.teams.away.name}
+          </span>
+        </div>
+      </div>
+      <div className="mono" style={{fontSize:10,color:'var(--ink-3)',
+        textAlign:'right',maxWidth:80,lineHeight:1.4}}>
+        {m.fixture.venue?.name?.split(' ').slice(0,2).join(' ') || ''}
+      </div>
+    </div>
+  );
+}
+
+function ResultRow({ m, onTap }) {
+  const hCode = teamCode(m.teams.home.name);
+  const aCode = teamCode(m.teams.away.name);
+  const hWon = m.goals.home > m.goals.away;
+  const aWon = m.goals.away > m.goals.home;
+  return (
+    <div onClick={() => onTap(m)}
+      style={{display:'flex',alignItems:'center',gap:10,
+        padding:'10px 0',borderTop:'1px solid var(--line)',cursor:'pointer'}}>
+      <TeamBlock code={hCode} size={24}/>
+      <span className="mono" style={{fontSize:12,fontWeight:700,width:34,
+        color:hWon?'var(--ink-0)':'var(--ink-2)'}}>{hCode}</span>
+      <div className="chunky" style={{fontSize:20,color:'var(--ink-0)',
+        flex:1,textAlign:'center',letterSpacing:'0.05em'}}>
+        {m.goals.home ?? 0}–{m.goals.away ?? 0}
+      </div>
+      <span className="mono" style={{fontSize:12,fontWeight:700,width:34,
+        textAlign:'right',color:aWon?'var(--ink-0)':'var(--ink-2)'}}>{aCode}</span>
+      <TeamBlock code={aCode} size={24}/>
+      <span className="mono caps" style={{fontSize:9,color:'var(--ink-3)',
+        border:'1px solid var(--line-strong)',padding:'2px 6px',marginLeft:4,
+        letterSpacing:'0.1em'}}>FT</span>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MATCH DETAIL SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
+function MatchDetailScreen({ match: m, onBack }) {
+  const [tab, setTab] = useState('EVENTS');
+  const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
-  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  const hCode = teamCode(m.teams.home.name);
+  const aCode = teamCode(m.teams.away.name);
+  const isLive = isLiveStatus(m.fixture.status.short);
+  const isFT = isFTStatus(m.fixture.status.short);
+  const elapsed = m.fixture.status.elapsed || 0;
+  const pct = Math.min((elapsed/90)*100, 100);
 
   useEffect(() => {
-    fetchStandings().then(s => { setStandings(s); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+    fetchMatchDetail(m.fixture.id).then(d => {
+      setDetail(d); setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [m.fixture.id]);
 
-  const grpData = standings[activeGroup] || [];
+  const getStat = (side, type) => {
+    if (!detail?.stats) return '0';
+    const teamId = side === 'H' ? m.teams.home.id : m.teams.away.id;
+    const ts = detail.stats.find(s => s.team.id === teamId)?.statistics || [];
+    return ts.find(x => x.type === type)?.value ?? '0';
+  };
+
+  const STAT_ROWS = [
+    {label:'POSSESSION', type:'Ball Possession', unit:'%'},
+    {label:'SHOTS', type:'Total Shots'},
+    {label:'ON TARGET', type:'Shots on Goal'},
+    {label:'CORNERS', type:'Corner Kicks'},
+    {label:'YELLOW', type:'Yellow Cards'},
+    {label:'FOULS', type:'Fouls'},
+  ];
+
+  const hLineup = detail?.lineups?.find(l => l.team.id === m.teams.home.id)?.startXI || [];
+  const aLineup = detail?.lineups?.find(l => l.team.id === m.teams.away.id)?.startXI || [];
+  const events = detail?.events || [];
 
   return (
-    <div className="fade-in">
-      <div className="card-header">
-        <div className="section-title">🏆 Group Tables</div>
-        <span className="badge badge-gold">2026</span>
+    <div className="screen-enter screen-scroll">
+      {/* Header */}
+      <div style={{padding:`calc(var(--safe-top) + 12px) 16px 10px`,
+        borderBottom:'1px solid var(--line)',background:'var(--bg-1)',
+        display:'flex',alignItems:'center',justifyContent:'space-between',
+        position:'sticky',top:0,zIndex:20}}>
+        <button onClick={onBack} className="btn-ghost">← BACK</button>
+        <div className="mono caps" style={{fontSize:10,color:'var(--ink-2)',letterSpacing:'0.14em'}}>
+          MATCH · {m.league.round?.replace('Group Stage - ','GS ') || ''}
+        </div>
+        <div style={{width:60}}/>
       </div>
 
-      <div className="group-tabs">
-        {groups.map(g => (
-          <div key={g} className={`group-tab ${activeGroup===g?'active':''}`} onClick={() => setActiveGroup(g)}>
-            Group {g}
+      {/* Scoreboard */}
+      <div style={{background:'var(--bg-0)',borderBottom:'1px solid var(--line)',
+        padding:'16px 16px 20px',position:'relative'}}>
+        {/* Grid overlay for live */}
+        {isLive && <div style={{position:'absolute',inset:0,opacity:0.06,
+          backgroundImage:'linear-gradient(var(--ink-1) 1px, transparent 1px), linear-gradient(90deg, var(--ink-1) 1px, transparent 1px)',
+          backgroundSize:'24px 24px',pointerEvents:'none'}}/>}
+
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:16,position:'relative'}}>
+          {isLive ? <LiveTag min={m.fixture.status.elapsed}/> : <StatusTag status={m.fixture.status.short}/>}
+          <span className="mono" style={{fontSize:10,color:'var(--ink-3)'}}>
+            {m.fixture.venue?.city || ''}
+          </span>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',
+          alignItems:'center',gap:8,position:'relative'}}>
+          <div style={{textAlign:'center'}}>
+            <div style={{display:'flex',justifyContent:'center',marginBottom:8}}>
+              <TeamBlock code={hCode} size={56}/>
+            </div>
+            <div className="chunky" style={{fontSize:20,color:'var(--ink-0)'}}>{hCode}</div>
+            <div className="mono" style={{fontSize:9,color:'var(--ink-2)',marginTop:2}}>
+              {m.teams.home.name.toUpperCase()}
+            </div>
           </div>
+          <div style={{textAlign:'center',padding:'0 4px'}}>
+            <div className="chunky" style={{fontSize:66,lineHeight:1,color:'var(--ink-0)',
+              fontFeatureSettings:'"tnum"'}}>
+              {m.goals.home ?? 0}
+              <span style={{color:'var(--ink-3)',margin:'0 4px',fontSize:50}}>:</span>
+              {m.goals.away ?? 0}
+            </div>
+            {m.score?.halftime?.home != null && (
+              <div className="mono" style={{fontSize:9,color:'var(--ink-3)',marginTop:4,letterSpacing:'0.12em'}}>
+                HT {m.score.halftime.home}–{m.score.halftime.away}
+              </div>
+            )}
+          </div>
+          <div style={{textAlign:'center'}}>
+            <div style={{display:'flex',justifyContent:'center',marginBottom:8}}>
+              <TeamBlock code={aCode} size={56}/>
+            </div>
+            <div className="chunky" style={{fontSize:20,color:'var(--ink-0)'}}>{aCode}</div>
+            <div className="mono" style={{fontSize:9,color:'var(--ink-2)',marginTop:2}}>
+              {m.teams.away.name.toUpperCase()}
+            </div>
+          </div>
+        </div>
+
+        {/* Minute timeline */}
+        {(isLive || isFT) && (
+          <div style={{marginTop:20,position:'relative'}}>
+            <div style={{height:20,border:'1px solid var(--line-strong)',position:'relative',overflow:'hidden'}}>
+              <div style={{position:'absolute',inset:0,width:`${isFT?100:pct}%`,
+                background:'color-mix(in oklch, var(--acc-red) 20%, transparent)'}}/>
+              {!isFT && <div style={{position:'absolute',top:0,bottom:0,left:`${pct}%`,
+                width:0,borderLeft:'2px solid var(--ink-0)'}}/>}
+              <div style={{position:'absolute',top:'50%',left:'50%',
+                transform:'translate(-50%,-50%)',
+                fontFamily:'var(--f-mono)',fontSize:9,color:'var(--ink-2)',letterSpacing:'0.18em'}}>
+                HT
+              </div>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',
+              fontFamily:'var(--f-mono)',fontSize:9,color:'var(--ink-3)',
+              marginTop:3,letterSpacing:'0.1em'}}>
+              <span>00'</span><span>45'</span>
+              {isLive && <span style={{color:'var(--acc-red)'}}>{elapsed}'</span>}
+              <span>90'</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Tab strip */}
+      <div style={{display:'flex',borderBottom:'1px solid var(--line)',
+        background:'var(--bg-1)',position:'sticky',top:44+parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-top')||'0'),zIndex:19}}>
+        {['EVENTS','STATS','LINEUPS'].map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className="mono caps"
+            style={{flex:1,background:'none',border:'none',
+              borderBottom: tab===t ? '2px solid var(--acc-red)' : '2px solid transparent',
+              color:tab===t?'var(--ink-0)':'var(--ink-2)',
+              padding:'12px 0',fontSize:10,letterSpacing:'0.14em',
+              fontWeight:tab===t?700:500,cursor:'pointer',
+              transition:'color .15s'}}>
+            {t}
+          </button>
         ))}
       </div>
 
       {loading && <div className="spinner"/>}
-      {!loading && (
-        <div className="card">
-          <table className="standings-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th style={{textAlign:'left'}}>Team</th>
-                <th>P</th><th>W</th><th>D</th><th>L</th>
-                <th>GF</th><th>GD</th>
-                <th>Pts</th>
-                <th>Form</th>
-              </tr>
-            </thead>
-            <tbody>
-              {grpData.length === 0 && (
-                <tr><td colSpan={10} style={{textAlign:'center',padding:'20px',color:'var(--muted)',fontSize:13}}>
-                  No data yet for Group {activeGroup}
-                </td></tr>
-              )}
-              {grpData.map((row, i) => (
-                <tr key={row.team.id} className={i < 2 ? 'qualify' : i === 2 ? 'maybe' : ''}>
-                  <td style={{color:'var(--muted)',fontWeight:700}}>{i+1}</td>
-                  <td>
-                    <div className="team-cell">
-                      <span>{flag(row.team.name)}</span>
-                      <span style={{fontWeight:500}}>{row.team.name}</span>
-                    </div>
-                  </td>
-                  <td>{row.all.played}</td>
-                  <td>{row.all.win}</td>
-                  <td>{row.all.draw}</td>
-                  <td>{row.all.lose}</td>
-                  <td>{row.all.goals.for}</td>
-                  <td style={{color: row.goalsDiff > 0 ? 'var(--green)' : row.goalsDiff < 0 ? 'var(--red)' : 'var(--muted)'}}>
-                    {row.goalsDiff > 0 ? '+':''}{row.goalsDiff}
-                  </td>
-                  <td className="pts">{row.points}</td>
-                  <td>
-                    <div className="form-dots">
-                      {(row.form||'').split('').slice(-5).map((r,j) => (
-                        <div key={j} className={`form-dot ${r}`}/>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {grpData.length > 0 && (
-            <div style={{display:'flex',gap:16,marginTop:12,paddingTop:10,borderTop:'1px solid var(--border)',fontSize:11,color:'var(--muted)'}}>
-              <span><span style={{color:'var(--green)',fontWeight:700}}>│</span> Advance</span>
-              <span><span style={{color:'var(--gold)',fontWeight:700}}>│</span> Best 3rd (possibly)</span>
+
+      {!loading && tab === 'EVENTS' && (
+        <div style={{padding:'0 16px'}}>
+          {events.length === 0 && (
+            <div style={{padding:'30px 0',textAlign:'center',
+              fontFamily:'var(--f-mono)',fontSize:11,color:'var(--ink-3)',letterSpacing:'0.1em'}}>
+              NO EVENTS RECORDED
             </div>
           )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── PREDICT TAB ──────────────────────────────────────────────────────────────
-function PredictTab({ matches, username, roomCode }) {
-  const [preds, setPreds] = useState(() => JSON.parse(localStorage.getItem('wc26_preds') || '{}'));
-  const [inputs, setInputs] = useState({});
-
-  const save = (fid) => {
-    if (!username) return alert('Set your name first (tap the badge top right)');
-    const input = inputs[fid] || {};
-    if (input.home === undefined || input.away === undefined) return;
-    const newPreds = { ...preds, [fid]: { home: input.home, away: input.away, ts: Date.now() } };
-    setPreds(newPreds);
-    localStorage.setItem('wc26_preds', JSON.stringify(newPreds));
-
-    // Save to Firebase if available
-    if (db && fbModules) {
-      fbModules.set(fbModules.ref(db, `rooms/${roomCode}/predictions/${username}/${fid}`), {
-        home: input.home, away: input.away, ts: Date.now()
-      });
-    }
-  };
-
-  const setInput = (fid, side, val) => {
-    const v = Math.max(0, Math.min(20, parseInt(val) || 0));
-    setInputs(prev => ({ ...prev, [fid]: { ...(prev[fid]||{}), [side]: v } }));
-  };
-
-  const scoreResult = (match, pred) => {
-    const ah = match.goals.home, aa = match.goals.away;
-    const ph = pred.home, pa = pred.away;
-    if (ah === null) return null;
-    if (ph === ah && pa === aa) return { label: '🎯 Exact!', pts: 3, cls: 'correct' };
-    const realResult = ah > aa ? 'H' : ah < aa ? 'A' : 'D';
-    const predResult = ph > pa ? 'H' : ph < pa ? 'A' : 'D';
-    if (realResult === predResult) return { label: '✓ Right winner', pts: 1, cls: 'partial' };
-    return { label: '✗ Wrong', pts: 0, cls: 'wrong' };
-  };
-
-  const predictable = matches.filter(m => ['NS','1H','2H','HT','ET','BT','P','FT','AET','PEN'].includes(m.fixture.status.short));
-
-  return (
-    <div className="fade-in">
-      <div className="card-header">
-        <div className="section-title">🔮 Predictions</div>
-        <span className="badge badge-gold">Locked before KO</span>
-      </div>
-
-      <div className="card" style={{marginBottom:12,fontSize:13,color:'var(--muted)',lineHeight:1.6}}>
-        <strong style={{color:'var(--text)'}}>How it works:</strong><br/>
-        🎯 Exact score = <strong style={{color:'var(--gold)'}}>3 pts</strong> &nbsp;|&nbsp;
-        ✓ Correct winner = <strong style={{color:'var(--gold)'}}>1 pt</strong> &nbsp;|&nbsp;
-        ✗ Wrong = 0 pts<br/>
-        Predictions lock at kickoff.
-      </div>
-
-      {predictable.map(m => {
-        const fid = m.fixture.id;
-        const pred = preds[fid];
-        const isNS = m.fixture.status.short === 'NS';
-        const isFinished = ['FT','AET','PEN'].includes(m.fixture.status.short);
-        const result = pred && !isNS ? scoreResult(m, pred) : null;
-        const inp = inputs[fid] || {};
-
-        return (
-          <div key={fid} className="pred-match">
-            <div className="pred-teams-row">
-              <div className="pred-team">
-                <span className="pred-flag">{flag(m.teams.home.name)}</span>
-                <span className="pred-name">{m.teams.home.name}</span>
-              </div>
-              {!pred && isNS ? (
-                <div className="score-inputs">
-                  <input type="number" className="score-input" min="0" max="20"
-                    value={inp.home ?? ''}
-                    onChange={e => setInput(fid,'home',e.target.value)}
-                    placeholder="0"
-                  />
-                  <span className="score-vsep">–</span>
-                  <input type="number" className="score-input" min="0" max="20"
-                    value={inp.away ?? ''}
-                    onChange={e => setInput(fid,'away',e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-              ) : (
-                <div style={{textAlign:'center'}}>
-                  {isFinished && (
-                    <div style={{fontSize:12,color:'var(--muted)',marginBottom:4}}>
-                      Actual: {m.goals.home}–{m.goals.away}
-                    </div>
-                  )}
-                  {pred ? (
-                    <div style={{fontFamily:'var(--font-display)',fontSize:28,color:'var(--gold)'}}>
-                      {pred.home}–{pred.away}
-                    </div>
-                  ) : (
-                    <div style={{fontFamily:'var(--font-display)',fontSize:22,color:'var(--muted)'}}>
-                      {m.goals.home ?? '?'}–{m.goals.away ?? '?'}
-                    </div>
-                  )}
-                </div>
-              )}
-              <div className="pred-team">
-                <span className="pred-flag">{flag(m.teams.away.name)}</span>
-                <span className="pred-name">{m.teams.away.name}</span>
-              </div>
-            </div>
-
-            {result && (
-              <div style={{textAlign:'center',marginBottom:10}}>
-                <span className={`pred-result ${result.cls}`}>{result.label} +{result.pts}pts</span>
-              </div>
-            )}
-
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:12,color:'var(--muted)'}}>
-              <span>{isNS ? `KO: ${fmtTime(m.fixture.date)}` : m.fixture.status.short}</span>
-              {!pred && isNS && (
-                <button className="btn btn-gold btn-sm"
-                  disabled={inp.home === undefined || inp.away === undefined}
-                  onClick={() => save(fid)}
-                  style={{opacity: inp.home !== undefined && inp.away !== undefined ? 1 : 0.5}}
-                >
-                  Lock it in 🔒
-                </button>
-              )}
-              {pred && isNS && <span style={{color:'var(--gold)',fontSize:12}}>🔒 Locked: {pred.home}–{pred.away}</span>}
-            </div>
-          </div>
-        );
-      })}
-
-      {predictable.length === 0 && (
-        <div className="empty">
-          <div className="big">🔮</div>
-          <h3>No matches to predict</h3>
-          <p>Upcoming fixtures will appear here when the schedule is confirmed.</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── BATTLE TAB ────────────────────────────────────────────────────────────────
-function BattleTab({ matches, username, roomCode }) {
-  const [activeSection, setActiveSection] = useState('polls');
-  const [pollVotes, setPollVotes] = useState(() => JSON.parse(localStorage.getItem('wc26_polls') || '{}'));
-  const [pollData, setPollData] = useState({});
-  const [callIt, setCallIt] = useState(() => JSON.parse(localStorage.getItem('wc26_callit') || '{}'));
-
-  const live = matches.filter(x => ['LIVE','1H','2H','HT','ET','BT','P'].includes(x.fixture.status.short));
-  const currentMatch = live[0];
-
-  useEffect(() => {
-    if (!db || !fbModules || !roomCode) return;
-    POLLS.forEach(poll => {
-      fbModules.onValue(fbModules.ref(db, `rooms/${roomCode}/polls/${poll.id}`), snap => {
-        setPollData(prev => ({ ...prev, [poll.id]: snap.val() || {} }));
-      });
-    });
-  }, [roomCode]);
-
-  const vote = (pollId, option) => {
-    if (pollVotes[pollId]) return;
-    const newVotes = { ...pollVotes, [pollId]: option };
-    setPollVotes(newVotes);
-    localStorage.setItem('wc26_polls', JSON.stringify(newVotes));
-    if (db && fbModules && username) {
-      const voteRef = fbModules.ref(db, `rooms/${roomCode}/polls/${pollId}/${username}`);
-      fbModules.set(voteRef, option);
-    }
-    // Local simulation
-    setPollData(prev => ({
-      ...prev,
-      [pollId]: { ...(prev[pollId]||{}), [username||'guest']: option }
-    }));
-  };
-
-  const getPollCounts = (pollId, options) => {
-    const votes = pollData[pollId] || {};
-    const total = Object.keys(votes).length;
-    return options.map(o => ({
-      option: o,
-      count: Object.values(votes).filter(v => v === o).length,
-      pct: total ? Math.round((Object.values(votes).filter(v => v === o).length / total) * 100) : 0
-    }));
-  };
-
-  const callGoalscorer = (matchId, player) => {
-    if (callIt[matchId]) return;
-    const newCall = { ...callIt, [matchId]: player };
-    setCallIt(newCall);
-    localStorage.setItem('wc26_callit', JSON.stringify(newCall));
-    if (db && fbModules && username) {
-      fbModules.set(fbModules.ref(db, `rooms/${roomCode}/callit/${username}/${matchId}`), { player, ts: Date.now() });
-    }
-  };
-
-  // Demo lineup for Call It
-  const demoLineup = currentMatch ? [
-    'Vinicius Jr', 'Rodrygo', 'Paquetá', 'Raphinha',
-    'Casemiro', 'Lucas P.', 'Messi', 'Di María',
-    'Dybala', 'Mac Allister', 'De Paul'
-  ] : [];
-
-  return (
-    <div className="fade-in">
-      <div className="card-header">
-        <div className="section-title">⚡ Match Battle</div>
-        <span className="badge badge-blue">Friends</span>
-      </div>
-
-      <div className="tabs">
-        {['polls','callit','leaderboard'].map(s => (
-          <div key={s} className={`tab ${activeSection===s?'active':''}`} onClick={() => setActiveSection(s)}>
-            {s === 'polls' ? '📊 Polls' : s === 'callit' ? '⚡ Call It' : '🏆 Board'}
-          </div>
-        ))}
-      </div>
-
-      {activeSection === 'polls' && (
-        <div>
-          {POLLS.map(poll => {
-            const voted = pollVotes[poll.id];
-            const counts = getPollCounts(poll.id, poll.options);
-            const totalVotes = counts.reduce((a,c) => a+c.count, 0);
-            const maxPct = Math.max(...counts.map(c => c.pct));
-
+          {[...events].reverse().map((ev,i) => {
+            const isGoal = ev.type === 'Goal';
+            const isYellow = ev.detail === 'Yellow Card';
+            const isRed = ev.detail === 'Red Card';
+            const side = ev.team.id === m.teams.home.id ? hCode : aCode;
             return (
-              <div key={poll.id} className="card" style={{marginBottom:10}}>
-                <div style={{fontWeight:600,fontSize:15,marginBottom:12}}>{poll.question}</div>
-                {counts.map(c => (
-                  <div
-                    key={c.option}
-                    className={`poll-option ${voted ? 'voted' : ''} ${voted && c.pct === maxPct && c.count > 0 ? 'winner' : ''}`}
-                    onClick={() => !voted && vote(poll.id, c.option)}
-                  >
-                    <div className="poll-fill" style={{width: voted ? `${c.pct}%` : '0%'}}
-                      data-winner={c.pct === maxPct && c.count > 0}/>
-                    <span className="poll-text">{c.option}</span>
-                    {voted && <span className="poll-pct">{c.pct}%</span>}
-                  </div>
-                ))}
-                {voted && <div className="poll-total">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</div>}
-                {!voted && <div style={{textAlign:'center',fontSize:12,color:'var(--muted)',marginTop:4}}>Tap to vote</div>}
+              <div key={i} style={{display:'grid',gridTemplateColumns:'36px 1fr auto',
+                gap:10,alignItems:'center',padding:'10px 0',
+                borderTop:'1px solid var(--line)'}}>
+                <span className="mono" style={{fontSize:11,color:'var(--ink-1)',fontWeight:700}}>
+                  {ev.time.elapsed}'
+                </span>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <span className="mono caps" style={{fontSize:9,letterSpacing:'0.14em',
+                    fontWeight:700,padding:'2px 6px',
+                    background:isGoal?'var(--acc-grn-d)':isYellow?'oklch(0.45 0.13 85)':isRed?'var(--acc-red-d)':'var(--bg-3)',
+                    color:'#fff'}}>
+                    {isGoal?'GOAL':isYellow?'YEL':isRed?'RED':ev.type.toUpperCase().slice(0,4)}
+                  </span>
+                  <span className="mono" style={{fontSize:12,color:'var(--ink-0)'}}>
+                    {ev.player?.name}
+                  </span>
+                </div>
+                <span className="mono" style={{fontSize:11,color:'var(--ink-3)'}}>{side}</span>
               </div>
             );
           })}
         </div>
       )}
 
-      {activeSection === 'callit' && (
-        <div>
-          <div className="card" style={{marginBottom:10,fontSize:13,color:'var(--muted)',lineHeight:1.6}}>
-            <strong style={{color:'var(--text)'}}>⚡ Call It!</strong> — during a live match, tap a player to call them as the <strong style={{color:'var(--gold)'}}>next goalscorer</strong>. +2pts if you're right!
+      {!loading && tab === 'STATS' && detail?.stats && (
+        <div style={{padding:'8px 16px'}}>
+          <div style={{display:'flex',justifyContent:'space-between',
+            padding:'8px 0 12px',borderBottom:'1px solid var(--line)'}}>
+            <span className="mono" style={{fontSize:12,fontWeight:700}}>{hCode}</span>
+            <span className="mono caps" style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'0.14em'}}>STAT</span>
+            <span className="mono" style={{fontSize:12,color:'var(--ink-2)'}}>{aCode}</span>
           </div>
-
-          {live.length === 0 ? (
-            <div className="empty">
-              <div className="big">🎯</div>
-              <h3>No live match</h3>
-              <p>Call It activates when a match is live. Come back during a game!</p>
-            </div>
-          ) : (
-            <>
-              {live.map(m => {
-                const fid = m.fixture.id;
-                const called = callIt[fid];
-                return (
-                  <div key={fid} className="card">
-                    <div className="card-header" style={{marginBottom:8}}>
-                      <div style={{fontFamily:'var(--font-display)',fontSize:16}}>
-                        {flag(m.teams.home.name)} {m.teams.home.name} {m.goals.home}–{m.goals.away} {m.teams.away.name} {flag(m.teams.away.name)}
-                      </div>
-                      <span className="badge badge-live"><span className="live-dot"/>{m.fixture.status.elapsed}'</span>
-                    </div>
-                    {called ? (
-                      <div style={{
-                        background:'rgba(245,197,24,0.1)', border:'1px solid rgba(245,197,24,0.3)',
-                        borderRadius:10, padding:'12px 16px', textAlign:'center'
-                      }}>
-                        <div style={{fontSize:12,color:'var(--muted)',marginBottom:4}}>Your call:</div>
-                        <div style={{fontFamily:'var(--font-display)',fontSize:22,color:'var(--gold)'}}>{called}</div>
-                        <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>Fingers crossed! ⚡</div>
-                      </div>
-                    ) : (
-                      <>
-                        <div style={{fontSize:12,color:'var(--muted)',marginBottom:8}}>Who scores next?</div>
-                        <div className="callit-grid">
-                          {demoLineup.map(player => (
-                            <div key={player} className="callit-player" onClick={() => callGoalscorer(fid, player)}>
-                              <div className="player-num">⚽</div>
-                              {player}
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </>
-          )}
+          {STAT_ROWS.map(row => {
+            const hv = getStat('H', row.type);
+            const av = getStat('A', row.type);
+            const hn = parseFloat(String(hv).replace('%','')) || 0;
+            const an = parseFloat(String(av).replace('%','')) || 0;
+            const total = hn + an || 1;
+            return (
+              <div key={row.type} style={{padding:'10px 0',borderBottom:'1px dashed var(--line)'}}>
+                <div style={{display:'flex',justifyContent:'space-between',
+                  alignItems:'baseline',marginBottom:6}}>
+                  <span className="mono" style={{fontSize:13,fontWeight:700}}>{hv}</span>
+                  <span className="mono caps" style={{fontSize:9,color:'var(--ink-2)',letterSpacing:'0.14em'}}>
+                    {row.label}
+                  </span>
+                  <span className="mono" style={{fontSize:13,color:'var(--ink-2)'}}>{av}</span>
+                </div>
+                <div style={{display:'flex',height:3,background:'var(--bg-3)'}}>
+                  <div style={{width:`${(hn/total)*100}%`,background:'var(--acc-red)'}}/>
+                  <div style={{flex:1,background:'var(--acc-grn-d)'}}/>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {activeSection === 'leaderboard' && (
-        <Leaderboard username={username} roomCode={roomCode} matches={matches} preds={JSON.parse(localStorage.getItem('wc26_preds')||'{}')} />
+      {!loading && tab === 'LINEUPS' && (
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:0,
+          borderTop:'1px solid var(--line)'}}>
+          {[{code:hCode, lineup:hLineup, name:m.teams.home.name},
+            {code:aCode, lineup:aLineup, name:m.teams.away.name}].map(({code,lineup,name},si) => (
+            <div key={code} style={{borderRight:si===0?'1px solid var(--line)':'none'}}>
+              <div style={{padding:'10px 12px',borderBottom:'1px solid var(--line)',
+                display:'flex',alignItems:'center',gap:8}}>
+                <TeamBlock code={code} size={20}/>
+                <span className="mono" style={{fontSize:12,fontWeight:700}}>{code}</span>
+              </div>
+              {lineup.map((p,i) => (
+                <div key={i} style={{display:'flex',gap:8,alignItems:'center',
+                  padding:'7px 12px',
+                  borderBottom:'1px dashed var(--line)',fontSize:11}}>
+                  <span className="mono" style={{width:18,color:'var(--ink-3)',
+                    fontWeight:700,textAlign:'center'}}>{p.player.number}</span>
+                  <span style={{color:'var(--ink-1)',fontSize:11}}>{p.player.name}</span>
+                </div>
+              ))}
+              {lineup.length === 0 && (
+                <div style={{padding:'20px 12px',fontFamily:'var(--f-mono)',
+                  fontSize:10,color:'var(--ink-3)',letterSpacing:'0.1em'}}>
+                  NOT YET<br/>AVAILABLE
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
+
+      <div style={{height:16}}/>
     </div>
   );
 }
 
-// ── LEADERBOARD ───────────────────────────────────────────────────────────────
-function Leaderboard({ username, roomCode, matches, preds }) {
-  const [board, setBoard] = useState([]);
+// ══════════════════════════════════════════════════════════════════════════════
+// STANDINGS SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
+function StandingsScreen() {
+  const [standings, setStandings] = useState({});
+  const [active, setActive] = useState('A');
+  const [loading, setLoading] = useState(true);
+  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 
   useEffect(() => {
-    // Build local leaderboard from predictions
-    const calcPts = (predsObj) => {
-      let pts = 0;
-      Object.entries(predsObj).forEach(([fid, pred]) => {
-        const match = matches.find(m => String(m.fixture.id) === String(fid));
-        if (!match) return;
-        if (match.goals.home === null) return;
-        if (pred.home === match.goals.home && pred.away === match.goals.away) pts += 3;
-        else {
-          const rr = match.goals.home > match.goals.away ? 'H' : match.goals.home < match.goals.away ? 'A' : 'D';
-          const pr = pred.home > pred.away ? 'H' : pred.home < pred.away ? 'A' : 'D';
-          if (rr === pr) pts += 1;
-        }
-      });
-      return pts;
-    };
+    fetchStandings().then(s => { setStandings(s); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
 
-    if (db && fbModules && roomCode) {
-      fbModules.onValue(fbModules.ref(db, `rooms/${roomCode}/predictions`), snap => {
-        const data = snap.val() || {};
-        const rows = Object.entries(data).map(([name, userPreds]) => ({
-          name,
-          pts: calcPts(userPreds),
-          predictions: Object.keys(userPreds).length
-        })).sort((a,b) => b.pts - a.pts);
-        setBoard(rows);
-      });
-    } else {
-      // Local only
-      const localPts = calcPts(preds);
-      setBoard([{ name: username || 'You', pts: localPts, predictions: Object.keys(preds).length }]);
-    }
-  }, [matches, preds, username, roomCode]);
+  const grp = standings[active] || [];
 
   return (
-    <div>
-      <div style={{fontSize:12,color:'var(--muted)',marginBottom:12,textAlign:'center'}}>
-        {db ? `Room: ${roomCode}` : 'Local mode — Firebase not connected for group leaderboard'}
+    <div className="screen-enter screen-scroll">
+      {/* Header */}
+      <div style={{padding:`calc(var(--safe-top) + 16px) 16px 12px`,
+        borderBottom:'1px solid var(--line)',background:'var(--bg-1)',
+        position:'sticky',top:0,zIndex:20}}>
+        <div className="mono caps" style={{fontSize:9,color:'var(--ink-3)',
+          letterSpacing:'0.18em'}}>
+          GROUP STAGE · 12 GROUPS · TOP 2 + BEST 8 THIRDS
+        </div>
+        <div className="chunky" style={{fontSize:28,marginTop:4,letterSpacing:'-0.04em'}}>
+          STANDINGS
+        </div>
       </div>
-      {board.length === 0 && (
-        <div className="empty">
-          <div className="big">🏆</div>
-          <h3>No scores yet</h3>
-          <p>Lock in predictions and complete matches to see the leaderboard!</p>
+
+      {/* Group picker */}
+      <div style={{display:'flex',overflowX:'auto',borderBottom:'1px solid var(--line)',
+        scrollbarWidth:'none',position:'sticky',
+        top:64,zIndex:19,background:'var(--bg-1)'}}>
+        {groups.map(g => (
+          <button key={g} onClick={() => setActive(g)}
+            className="mono"
+            style={{flexShrink:0,minWidth:52,padding:'13px 0',
+              background:'none',border:'none',
+              borderRight:'1px solid var(--line)',
+              borderBottom:active===g?'2px solid var(--acc-red)':'2px solid transparent',
+              color:active===g?'var(--ink-0)':'var(--ink-2)',
+              fontSize:11,fontWeight:active===g?700:500,
+              cursor:'pointer',letterSpacing:'0.05em',
+              transition:'color .15s'}}>
+            GR.{g}
+          </button>
+        ))}
+      </div>
+
+      {loading && <div className="spinner"/>}
+
+      {!loading && (
+        <>
+          <div style={{padding:'14px 16px 10px'}}>
+            <div className="chunky" style={{fontSize:22}}>GROUP {active}</div>
+            <div className="mono caps" style={{fontSize:9,color:'var(--ink-3)',
+              letterSpacing:'0.14em',marginTop:3}}>
+              UPDATED LIVE · {SEASON}
+            </div>
+          </div>
+
+          <div style={{padding:'0 16px'}}>
+            <HudCorners style={{background:'var(--bg-2)'}}>
+              {/* Column header */}
+              <div style={{display:'grid',
+                gridTemplateColumns:'22px 26px 1fr 24px 24px 24px 24px 36px 32px',
+                gap:3,alignItems:'center',padding:'8px 10px',
+                fontFamily:'var(--f-mono)',fontSize:9,color:'var(--ink-3)',
+                letterSpacing:'0.1em',borderBottom:'1px solid var(--line-strong)'}}>
+                <span>#</span><span/>
+                <span>TEAM</span>
+                <span style={{textAlign:'center'}}>P</span>
+                <span style={{textAlign:'center'}}>W</span>
+                <span style={{textAlign:'center'}}>D</span>
+                <span style={{textAlign:'center'}}>L</span>
+                <span style={{textAlign:'center'}}>GD</span>
+                <span style={{textAlign:'right'}}>PTS</span>
+              </div>
+
+              {grp.length === 0 && (
+                <div style={{padding:'24px',textAlign:'center',
+                  fontFamily:'var(--f-mono)',fontSize:11,color:'var(--ink-3)',letterSpacing:'0.1em'}}>
+                  NO DATA FOR GROUP {active}
+                </div>
+              )}
+
+              {grp.map((row,i) => {
+                const zone = i < 2 ? 'qualify' : i === 2 ? 'playoff' : 'out';
+                const zc = zone==='qualify'?'var(--acc-grn)':zone==='playoff'?'oklch(0.72 0.14 85)':'var(--ink-3)';
+                const gd = (row.goalsDiff || 0);
+                const code = teamCode(row.team.name);
+                return (
+                  <div key={row.team.id} style={{
+                    display:'grid',
+                    gridTemplateColumns:'22px 26px 1fr 24px 24px 24px 24px 36px 32px',
+                    gap:3,alignItems:'center',padding:'12px 10px',
+                    borderBottom:i<grp.length-1?'1px dashed var(--line)':'none',
+                    position:'relative'}}>
+                    <div style={{position:'absolute',left:0,top:0,bottom:0,
+                      width:2,background:zc}}/>
+                    <span className="mono" style={{fontSize:11,fontWeight:700,color:zc}}>
+                      {String(i+1).padStart(2,'0')}
+                    </span>
+                    <TeamBlock code={code} size={22}/>
+                    <div>
+                      <div className="mono" style={{fontSize:12,fontWeight:700}}>{code}</div>
+                      <div className="mono" style={{fontSize:8,color:'var(--ink-3)',marginTop:1}}>
+                        {row.team.name.toUpperCase().slice(0,12)}
+                      </div>
+                    </div>
+                    <span className="mono" style={{fontSize:11,textAlign:'center',color:'var(--ink-1)'}}>
+                      {row.all?.played ?? 0}
+                    </span>
+                    <span className="mono" style={{fontSize:11,textAlign:'center',color:'var(--ink-1)'}}>
+                      {row.all?.win ?? 0}
+                    </span>
+                    <span className="mono" style={{fontSize:11,textAlign:'center',color:'var(--ink-2)'}}>
+                      {row.all?.draw ?? 0}
+                    </span>
+                    <span className="mono" style={{fontSize:11,textAlign:'center',color:'var(--ink-2)'}}>
+                      {row.all?.lose ?? 0}
+                    </span>
+                    <span className="mono" style={{fontSize:10,textAlign:'center',
+                      color:gd>0?'var(--acc-grn)':gd<0?'var(--acc-red)':'var(--ink-2)'}}>
+                      {gd>0?'+':''}{gd}
+                    </span>
+                    <span className="chunky" style={{fontSize:18,textAlign:'right',
+                      color:'var(--ink-0)'}}>{row.points}</span>
+                  </div>
+                );
+              })}
+            </HudCorners>
+          </div>
+
+          {/* Legend */}
+          <div style={{padding:'12px 16px'}}>
+            {[
+              {c:'var(--acc-grn)',t:'TOP 2 · DIRECT TO ROUND OF 32'},
+              {c:'oklch(0.72 0.14 85)',t:'3RD PLACE · BEST 8 ADVANCE'},
+              {c:'var(--ink-3)',t:'ELIMINATED'},
+            ].map((l,i) => (
+              <div key={i} style={{display:'flex',alignItems:'center',gap:10,marginBottom:7}}>
+                <span style={{width:2,height:12,background:l.c,flexShrink:0}}/>
+                <span className="mono caps" style={{fontSize:9,color:'var(--ink-2)',letterSpacing:'0.1em'}}>
+                  {l.t}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      <div style={{height:16}}/>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PREDICT SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
+function PredictScreen({ matches, username, roomCode }) {
+  const [preds, setPreds] = useState(() => JSON.parse(localStorage.getItem('wc26_preds')||'{}'));
+  const [inputs, setInputs] = useState({});
+
+  const predictable = matches.filter(m =>
+    ['NS','1H','2H','HT','ET','BT','P','FT','AET','PEN'].includes(m.fixture.status.short)
+  );
+
+  const savePred = (fid) => {
+    const inp = inputs[fid] || {};
+    if (inp.home === undefined || inp.away === undefined) return;
+    const np = {...preds, [fid]:{home:inp.home, away:inp.away, ts:Date.now()}};
+    setPreds(np);
+    localStorage.setItem('wc26_preds', JSON.stringify(np));
+  };
+
+  const setInp = (fid, side, val) => {
+    const v = Math.max(0, Math.min(20, parseInt(val)||0));
+    setInputs(p => ({...p, [fid]:{...(p[fid]||{}),[side]:v}}));
+  };
+
+  const getResult = (m, pred) => {
+    const ah = m.goals.home, aa = m.goals.away;
+    if (ah === null || ah === undefined) return null;
+    if (pred.home === ah && pred.away === aa) return {label:'EXACT +3',cls:'var(--acc-grn)',pts:3};
+    const rr = ah>aa?'H':ah<aa?'A':'D';
+    const pr = pred.home>pred.away?'H':pred.home<pred.away?'A':'D';
+    if (rr===pr) return {label:'WINNER +1',cls:'oklch(0.72 0.14 85)',pts:1};
+    return {label:'WRONG +0',cls:'var(--acc-red)',pts:0};
+  };
+
+  return (
+    <div className="screen-enter screen-scroll">
+      <div style={{padding:`calc(var(--safe-top) + 16px) 16px 12px`,
+        borderBottom:'1px solid var(--line)',background:'var(--bg-1)',
+        position:'sticky',top:0,zIndex:20}}>
+        <div className="mono caps" style={{fontSize:9,color:'var(--ink-3)',letterSpacing:'0.18em'}}>
+          SCORE PREDICTOR
+        </div>
+        <div className="chunky" style={{fontSize:28,marginTop:4,letterSpacing:'-0.04em'}}>
+          PREDICTIONS
+        </div>
+      </div>
+
+      <div style={{padding:'12px 16px',borderBottom:'1px solid var(--line)',
+        fontFamily:'var(--f-mono)',fontSize:11,color:'var(--ink-2)',lineHeight:1.8}}>
+        <span style={{color:'var(--acc-grn)',fontWeight:700}}>●</span> EXACT SCORE = 3 PTS&nbsp;&nbsp;
+        <span style={{color:'oklch(0.72 0.14 85)',fontWeight:700}}>●</span> CORRECT WINNER = 1 PT&nbsp;&nbsp;
+        <span style={{color:'var(--acc-red)',fontWeight:700}}>●</span> WRONG = 0 PTS
+      </div>
+
+      {predictable.length === 0 && <div className="spinner"/>}
+
+      {predictable.map(m => {
+        const fid = m.fixture.id;
+        const pred = preds[fid];
+        const isNS = m.fixture.status.short === 'NS';
+        const isFT = isFTStatus(m.fixture.status.short);
+        const result = pred && !isNS ? getResult(m, pred) : null;
+        const inp = inputs[fid] || {};
+        const hCode = teamCode(m.teams.home.name);
+        const aCode = teamCode(m.teams.away.name);
+
+        return (
+          <div key={fid} style={{borderBottom:'1px solid var(--line)',padding:'14px 16px'}}>
+            {/* Match header */}
+            <div style={{display:'flex',justifyContent:'space-between',
+              alignItems:'center',marginBottom:12}}>
+              <span className="mono caps" style={{fontSize:9,color:'var(--ink-3)',letterSpacing:'0.12em'}}>
+                {m.league.round?.replace('Group Stage - ','GS ')?.replace('Group Stage','GS') || ''}
+              </span>
+              <span className="mono" style={{fontSize:9,color:'var(--ink-3)'}}>
+                {isNS ? `KO ${fmtKO(m.fixture.date)} · ${fmtDateShort(m.fixture.date)}`
+                  : m.fixture.status.short}
+              </span>
+            </div>
+
+            {/* Teams + score input */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',
+              alignItems:'center',gap:8}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <TeamBlock code={hCode} size={28}/>
+                <div>
+                  <div className="mono" style={{fontSize:13,fontWeight:700}}>{hCode}</div>
+                  <div className="mono" style={{fontSize:9,color:'var(--ink-3)'}}>{m.teams.home.name.slice(0,10).toUpperCase()}</div>
+                </div>
+              </div>
+
+              {/* Score area */}
+              {!pred && isNS ? (
+                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                  <input type="number" min="0" max="20"
+                    style={{width:44,height:44,background:'var(--bg-3)',
+                      border:`1px solid ${inp.home!==undefined?'var(--acc-red)':'var(--line-strong)'}`,
+                      color:'var(--ink-0)',fontFamily:'var(--f-mono)',fontWeight:700,
+                      fontSize:22,textAlign:'center',outline:'none'}}
+                    value={inp.home??''}
+                    onChange={e => setInp(fid,'home',e.target.value)}
+                    placeholder="0"/>
+                  <span className="mono" style={{color:'var(--ink-3)',fontSize:18}}>–</span>
+                  <input type="number" min="0" max="20"
+                    style={{width:44,height:44,background:'var(--bg-3)',
+                      border:`1px solid ${inp.away!==undefined?'var(--acc-red)':'var(--line-strong)'}`,
+                      color:'var(--ink-0)',fontFamily:'var(--f-mono)',fontWeight:700,
+                      fontSize:22,textAlign:'center',outline:'none'}}
+                    value={inp.away??''}
+                    onChange={e => setInp(fid,'away',e.target.value)}
+                    placeholder="0"/>
+                </div>
+              ) : (
+                <div style={{textAlign:'center'}}>
+                  {isFT && (
+                    <div className="mono" style={{fontSize:9,color:'var(--ink-3)',marginBottom:2,letterSpacing:'0.1em'}}>
+                      ACTUAL {m.goals.home}–{m.goals.away}
+                    </div>
+                  )}
+                  <div className="chunky" style={{fontSize:28,
+                    color:pred?'var(--ink-0)':'var(--ink-3)'}}>
+                    {pred ? `${pred.home}–${pred.away}` : `${m.goals.home??'?'}–${m.goals.away??'?'}`}
+                  </div>
+                  {result && (
+                    <div className="mono caps" style={{fontSize:9,fontWeight:700,
+                      color:result.cls,letterSpacing:'0.1em',marginTop:4}}>
+                      {result.label}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div style={{display:'flex',alignItems:'center',gap:8,justifyContent:'flex-end'}}>
+                <div style={{textAlign:'right'}}>
+                  <div className="mono" style={{fontSize:13,fontWeight:700}}>{aCode}</div>
+                  <div className="mono" style={{fontSize:9,color:'var(--ink-3)'}}>{m.teams.away.name.slice(0,10).toUpperCase()}</div>
+                </div>
+                <TeamBlock code={aCode} size={28}/>
+              </div>
+            </div>
+
+            {/* Lock button */}
+            {!pred && isNS && (
+              <div style={{marginTop:12}}>
+                <button className="btn-primary"
+                  disabled={inp.home===undefined||inp.away===undefined}
+                  onClick={() => savePred(fid)}
+                  style={{fontSize:11,padding:'9px',letterSpacing:'0.14em'}}>
+                  LOCK IN PREDICTION 🔒
+                </button>
+              </div>
+            )}
+            {pred && isNS && (
+              <div className="mono caps" style={{marginTop:10,fontSize:9,
+                color:'var(--acc-grn)',letterSpacing:'0.12em'}}>
+                ✓ LOCKED: {pred.home}–{pred.away}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div style={{height:16}}/>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BATTLE SCREEN (Polls + Call It)
+// ══════════════════════════════════════════════════════════════════════════════
+const POLLS = [
+  {id:'p1',q:'Who wins the 2026 World Cup?',opts:['Brazil','France','Argentina','Other']},
+  {id:'p2',q:'Tournament top scorer?',opts:['Mbappe','Vinicius Jr','Bellingham','Other']},
+  {id:'p3',q:'Best match of the group stage?',opts:['BRA vs ARG','FRA vs ENG','ESP vs GER','Other']},
+  {id:'p4',q:'Biggest upset of the tournament?',opts:['Already happened','Group stage','R16','QF+']},
+];
+
+function BattleScreen({ matches, username }) {
+  const [section, setSection] = useState('POLLS');
+  const [votes, setVotes] = useState(() => JSON.parse(localStorage.getItem('wc26_votes')||'{}'));
+  const [localTallies, setLocalTallies] = useState({});
+  const [callIt, setCallIt] = useState(() => JSON.parse(localStorage.getItem('wc26_callit')||'{}'));
+
+  const live = matches.filter(m => isLiveStatus(m.fixture.status.short));
+
+  const vote = (pollId, opt) => {
+    if (votes[pollId]) return;
+    const nv = {...votes,[pollId]:opt};
+    setVotes(nv);
+    localStorage.setItem('wc26_votes', JSON.stringify(nv));
+    setLocalTallies(t => {
+      const pt = t[pollId] || {};
+      return {...t, [pollId]:{...pt, [opt]:(pt[opt]||0)+1}};
+    });
+  };
+
+  const getTallies = (poll) => {
+    const t = localTallies[poll.id] || {};
+    const total = Object.values(t).reduce((a,b)=>a+b,0) || 1;
+    return poll.opts.map(o => ({opt:o, count:t[o]||0, pct:Math.round(((t[o]||0)/total)*100)}));
+  };
+
+  const callGoal = (matchId, player) => {
+    if (callIt[matchId]) return;
+    const nc = {...callIt,[matchId]:player};
+    setCallIt(nc);
+    localStorage.setItem('wc26_callit', JSON.stringify(nc));
+  };
+
+  const DEMO_PLAYERS = ['Mbappe','Griezmann','Vinicius Jr','Rodrygo',
+    'Messi','Di María','Bellingham','Kane','Gavi','Pedri'];
+
+  return (
+    <div className="screen-enter screen-scroll">
+      <div style={{padding:`calc(var(--safe-top) + 16px) 16px 12px`,
+        borderBottom:'1px solid var(--line)',background:'var(--bg-1)',
+        position:'sticky',top:0,zIndex:20}}>
+        <div className="mono caps" style={{fontSize:9,color:'var(--ink-3)',letterSpacing:'0.18em'}}>
+          FRIENDS BATTLE
+        </div>
+        <div className="chunky" style={{fontSize:28,marginTop:4,letterSpacing:'-0.04em'}}>
+          MATCH DAY
+        </div>
+      </div>
+
+      {/* Section tabs */}
+      <div style={{display:'flex',borderBottom:'1px solid var(--line)',
+        background:'var(--bg-1)',position:'sticky',top:60,zIndex:19}}>
+        {['POLLS','CALL IT','BOARD'].map(s => (
+          <button key={s} onClick={() => setSection(s)}
+            className="mono caps"
+            style={{flex:1,background:'none',border:'none',
+              borderBottom:section===s?'2px solid var(--acc-red)':'2px solid transparent',
+              color:section===s?'var(--ink-0)':'var(--ink-2)',
+              padding:'12px 0',fontSize:10,letterSpacing:'0.14em',
+              fontWeight:section===s?700:500,cursor:'pointer'}}>
+            {s}
+          </button>
+        ))}
+      </div>
+
+      {section === 'POLLS' && (
+        <div style={{padding:'0 16px'}}>
+          {POLLS.map(poll => {
+            const voted = votes[poll.id];
+            const tallies = getTallies(poll);
+            const maxPct = Math.max(...tallies.map(t => t.pct));
+            return (
+              <div key={poll.id} style={{borderBottom:'1px solid var(--line)',padding:'16px 0'}}>
+                <div style={{fontWeight:600,fontSize:15,marginBottom:12,lineHeight:1.4}}>
+                  {poll.q}
+                </div>
+                {tallies.map(t => (
+                  <div key={t.opt}
+                    onClick={() => !voted && vote(poll.id, t.opt)}
+                    style={{position:'relative',overflow:'hidden',
+                      border:`1px solid ${voted&&t.opt===votes[poll.id]?'var(--acc-red)':'var(--line-strong)'}`,
+                      padding:'10px 12px',marginBottom:6,
+                      cursor:voted?'default':'pointer',
+                      transition:'border-color .15s'}}>
+                    <div style={{position:'absolute',left:0,top:0,bottom:0,
+                      width:voted?`${t.pct}%`:'0%',
+                      background:'color-mix(in oklch, var(--acc-red) 12%, transparent)',
+                      transition:'width .6s ease'}}/>
+                    <div style={{position:'relative',display:'flex',
+                      justifyContent:'space-between',alignItems:'center'}}>
+                      <span className="mono" style={{fontSize:13,fontWeight:500}}>{t.opt}</span>
+                      {voted && (
+                        <span className="mono" style={{fontSize:13,fontWeight:700,
+                          color:t.pct===maxPct&&t.count>0?'var(--acc-grn)':'var(--ink-2)'}}>
+                          {t.pct}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {!voted && (
+                  <div className="mono" style={{fontSize:10,color:'var(--ink-3)',
+                    letterSpacing:'0.1em',marginTop:4}}>TAP TO VOTE</div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
-      {board.map((row, i) => (
-        <div key={row.name} className={`lb-row ${row.name === username ? 'me' : ''}`}>
-          <div className={`lb-rank ${i < 3 ? 'top' : ''}`}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</div>
-          <div>
-            <div className="lb-name">{row.name}{row.name === username ? ' (you)' : ''}</div>
-            <div className="lb-breakdown">{row.predictions} prediction{row.predictions !== 1 ? 's' : ''}</div>
+
+      {section === 'CALL IT' && (
+        <div style={{padding:'0 16px'}}>
+          <div style={{padding:'14px 0',borderBottom:'1px solid var(--line)',
+            fontFamily:'var(--f-mono)',fontSize:11,color:'var(--ink-2)',lineHeight:1.8}}>
+            During a live match — tap a player to call the <span style={{color:'var(--acc-grn)',fontWeight:700}}>next goalscorer</span>. +2pts if correct!
           </div>
-          <div className="lb-pts">{row.pts}<span style={{fontSize:14,color:'var(--muted)'}}>pts</span></div>
+
+          {live.length === 0 ? (
+            <div style={{padding:'40px 0',textAlign:'center'}}>
+              <div className="mono caps" style={{fontSize:11,color:'var(--ink-3)',
+                letterSpacing:'0.14em',lineHeight:2}}>
+                NO LIVE MATCHES<br/>
+                COME BACK DURING A GAME
+              </div>
+            </div>
+          ) : (
+            live.map(m => {
+              const hCode = teamCode(m.teams.home.name);
+              const aCode = teamCode(m.teams.away.name);
+              const called = callIt[m.fixture.id];
+              return (
+                <div key={m.fixture.id} style={{paddingTop:16}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                    <LiveTag min={m.fixture.status.elapsed}/>
+                    <span className="chunky" style={{fontSize:18}}>
+                      {hCode} {m.goals.home}:{m.goals.away} {aCode}
+                    </span>
+                  </div>
+                  {called ? (
+                    <HudCorners style={{background:'var(--bg-2)',padding:'16px',textAlign:'center'}}>
+                      <div className="mono caps" style={{fontSize:10,color:'var(--ink-3)',
+                        letterSpacing:'0.14em',marginBottom:6}}>YOUR CALL</div>
+                      <div className="chunky" style={{fontSize:26,color:'var(--acc-grn)'}}>{called}</div>
+                      <div className="mono" style={{fontSize:10,color:'var(--ink-3)',marginTop:6}}>
+                        FINGERS CROSSED ⚡
+                      </div>
+                    </HudCorners>
+                  ) : (
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+                      {DEMO_PLAYERS.map(p => (
+                        <div key={p} onClick={() => callGoal(m.fixture.id, p)}
+                          style={{border:'1px solid var(--line-strong)',
+                            padding:'10px 12px',cursor:'pointer',
+                            display:'flex',alignItems:'center',gap:8,
+                            transition:'border-color .15s',background:'var(--bg-2)'}}>
+                          <span style={{fontFamily:'var(--f-mono)',fontSize:9,
+                            color:'var(--ink-3)',fontWeight:700}}>⚽</span>
+                          <span style={{fontSize:13,fontWeight:500}}>{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {section === 'BOARD' && (
+        <Leaderboard matches={matches} username={username}
+          preds={JSON.parse(localStorage.getItem('wc26_preds')||'{}')}/>
+      )}
+
+      <div style={{height:16}}/>
+    </div>
+  );
+}
+
+function Leaderboard({ matches, username, preds }) {
+  const calcPts = (p) => {
+    let pts = 0;
+    Object.entries(p).forEach(([fid, pred]) => {
+      const m = matches.find(x => String(x.fixture.id) === String(fid));
+      if (!m || m.goals.home == null) return;
+      if (pred.home === m.goals.home && pred.away === m.goals.away) { pts += 3; return; }
+      const rr = m.goals.home > m.goals.away ? 'H' : m.goals.home < m.goals.away ? 'A' : 'D';
+      const pr = pred.home > pred.away ? 'H' : pred.home < pred.away ? 'A' : 'D';
+      if (rr === pr) pts += 1;
+    });
+    return pts;
+  };
+
+  const myPts = calcPts(preds);
+  const board = [{name: username || 'You', pts: myPts, preds: Object.keys(preds).length}];
+
+  return (
+    <div style={{padding:'0 16px'}}>
+      <SectionHeader num={1} label="LEADERBOARD"/>
+      <div className="mono caps" style={{fontSize:10,color:'var(--ink-3)',
+        letterSpacing:'0.1em',marginBottom:12,
+        padding:'8px',background:'var(--bg-2)',
+        border:'1px solid var(--line)'}}>
+        ℹ FIREBASE NOT YET CONNECTED · SHOWING LOCAL SCORES ONLY
+      </div>
+      {board.map((row,i) => (
+        <div key={row.name} style={{
+          display:'flex',alignItems:'center',gap:12,padding:'12px',
+          background:'color-mix(in oklch, var(--acc-red) 10%, transparent)',
+          border:'1px solid color-mix(in oklch, var(--acc-red) 30%, transparent)',
+          marginBottom:6}}>
+          <div className="chunky" style={{fontSize:22,color:'var(--acc-grn)',width:28}}>
+            {i===0?'01':i===1?'02':'0'+(i+1)}
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:600,fontSize:15}}>{row.name} <span style={{color:'var(--ink-3)',fontSize:12}}>(you)</span></div>
+            <div className="mono" style={{fontSize:10,color:'var(--ink-3)',marginTop:2,letterSpacing:'0.1em'}}>
+              {row.preds} PREDICTION{row.preds!==1?'S':''}
+            </div>
+          </div>
+          <div>
+            <div className="chunky" style={{fontSize:28,color:'var(--acc-grn)'}}>{row.pts}</div>
+            <div className="mono" style={{fontSize:9,color:'var(--ink-3)',textAlign:'right',letterSpacing:'0.1em'}}>PTS</div>
+          </div>
         </div>
       ))}
     </div>
   );
 }
 
-// ── INFO TAB ──────────────────────────────────────────────────────────────────
-function InfoTab() {
-  const [venueFilter, setVenueFilter] = useState('All');
-  const countries = ['All', 'USA', 'Canada', 'Mexico'];
-  const filtered = venueFilter === 'All' ? VENUES : VENUES.filter(v => v.country === venueFilter);
+// ══════════════════════════════════════════════════════════════════════════════
+// MORE SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
+const VENUES = [
+  {city:'New York/NJ',stadium:'MetLife Stadium',country:'USA',cap:'82,500'},
+  {city:'Los Angeles',stadium:'SoFi Stadium',country:'USA',cap:'70,240'},
+  {city:'Dallas',stadium:'AT&T Stadium',country:'USA',cap:'80,000'},
+  {city:'San Francisco',stadium:"Levi's Stadium",country:'USA',cap:'68,500'},
+  {city:'Miami',stadium:'Hard Rock Stadium',country:'USA',cap:'64,767'},
+  {city:'Seattle',stadium:'Lumen Field',country:'USA',cap:'72,000'},
+  {city:'Boston',stadium:'Gillette Stadium',country:'USA',cap:'65,878'},
+  {city:'Philadelphia',stadium:'Lincoln Financial Field',country:'USA',cap:'69,328'},
+  {city:'Kansas City',stadium:'Arrowhead Stadium',country:'USA',cap:'76,416'},
+  {city:'Atlanta',stadium:'Mercedes-Benz Stadium',country:'USA',cap:'71,000'},
+  {city:'Houston',stadium:'NRG Stadium',country:'USA',cap:'72,220'},
+  {city:'Toronto',stadium:'BMO Field',country:'CAN',cap:'30,000'},
+  {city:'Vancouver',stadium:'BC Place',country:'CAN',cap:'54,500'},
+  {city:'Mexico City',stadium:'Estadio Azteca',country:'MEX',cap:'87,500'},
+  {city:'Guadalajara',stadium:'Estadio Akron',country:'MEX',cap:'49,850'},
+  {city:'Monterrey',stadium:'Estadio BBVA',country:'MEX',cap:'53,460'},
+];
 
-  return (
-    <div className="fade-in">
-      <div className="hero" style={{textAlign:'left', padding:'18px 16px'}}>
-        <div className="eyebrow">World Cup 2026</div>
-        <h1 style={{fontSize:26}}>The Biggest<br/>Tournament Ever</h1>
-        <div style={{fontSize:13,color:'var(--muted)',marginTop:6}}>June 11 – July 19, 2026</div>
+function MoreScreen({ username, setShowNameEdit, roomCode, onCopyRoom }) {
+  const [section, setSection] = useState(null);
+  const items = [
+    {idx:'01',label:'FORMAT',desc:'48 teams · 12 groups · 104 matches'},
+    {idx:'02',label:'VENUES',desc:'16 stadiums across USA, Canada & Mexico'},
+    {idx:'03',label:'ROOM CODE',desc:`Your group: ${roomCode}`},
+    {idx:'04',label:'YOUR NAME',desc:username || 'Not set'},
+    {idx:'05',label:'ABOUT',desc:'WC26 companion app'},
+  ];
+
+  if (section === 'FORMAT') return (
+    <div className="screen-enter screen-scroll">
+      <div style={{padding:`calc(var(--safe-top) + 14px) 16px 12px`,
+        borderBottom:'1px solid var(--line)',display:'flex',
+        alignItems:'center',gap:12,background:'var(--bg-1)',
+        position:'sticky',top:0,zIndex:20}}>
+        <button onClick={() => setSection(null)} className="btn-ghost">← BACK</button>
+        <div className="chunky" style={{fontSize:20}}>FORMAT</div>
       </div>
-
-      <div className="info-grid" style={{marginBottom:12}}>
-        <div className="info-tile"><div className="num">48</div><div className="label">Teams</div></div>
-        <div className="info-tile"><div className="num">104</div><div className="label">Matches</div></div>
-        <div className="info-tile"><div className="num">16</div><div className="label">Stadiums</div></div>
-        <div className="info-tile"><div className="num">12</div><div className="label">Groups</div></div>
-        <div className="info-tile"><div className="num">3</div><div className="label">Host Nations</div></div>
-        <div className="info-tile"><div className="num">39</div><div className="label">Days</div></div>
-      </div>
-
-      <div className="card" style={{marginBottom:12}}>
-        <div className="card-header"><div className="section-title">📋 Format</div></div>
-        <div style={{fontSize:13,lineHeight:1.8,color:'var(--muted)'}}>
-          <div>🔵 <strong style={{color:'var(--text)'}}>Group Stage</strong> — 12 groups of 4 teams</div>
-          <div>🟡 <strong style={{color:'var(--text)'}}>Advance</strong> — Top 2 per group + 8 best 3rd placed teams</div>
-          <div>🟢 <strong style={{color:'var(--text)'}}>Knockout</strong> — Round of 32 → R16 → QF → SF → Final</div>
-          <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border)'}}>
-            🏆 <strong style={{color:'var(--text)'}}>Final</strong> — MetLife Stadium, New York/New Jersey<br/>
-            <span style={{marginLeft:22}}>July 19, 2026</span>
+      <div style={{padding:'16px'}}>
+        {[
+          {label:'TEAMS',val:'48',sub:'Expanded from 32'},
+          {label:'GROUPS',val:'12',sub:'4 teams each'},
+          {label:'MATCHES',val:'104',sub:'Most ever'},
+          {label:'DAYS',val:'39',sub:'Jun 11 – Jul 19'},
+          {label:'STADIUMS',val:'16',sub:'3 countries'},
+          {label:'HOST NATIONS',val:'3',sub:'USA · Canada · Mexico'},
+        ].map((s,i) => (
+          <div key={i} style={{display:'flex',justifyContent:'space-between',
+            alignItems:'center',padding:'14px 0',
+            borderBottom:'1px dashed var(--line)'}}>
+            <div>
+              <div className="mono caps" style={{fontSize:10,color:'var(--ink-3)',letterSpacing:'0.14em'}}>
+                {s.label}
+              </div>
+              <div style={{fontSize:13,color:'var(--ink-2)',marginTop:2}}>{s.sub}</div>
+            </div>
+            <div className="chunky" style={{fontSize:36,color:'var(--ink-0)'}}>{s.val}</div>
+          </div>
+        ))}
+        <div style={{marginTop:20,padding:'14px',background:'var(--bg-2)',
+          border:'1px solid var(--line)'}}>
+          <div className="mono caps" style={{fontSize:9,color:'var(--acc-red)',
+            letterSpacing:'0.14em',marginBottom:8}}>FINAL</div>
+          <div style={{fontWeight:700,fontSize:16}}>MetLife Stadium</div>
+          <div className="mono" style={{fontSize:11,color:'var(--ink-2)',marginTop:4}}>
+            New York / New Jersey · July 19, 2026
           </div>
         </div>
       </div>
+      <div style={{height:16}}/>
+    </div>
+  );
 
-      <div className="card-header">
-        <div className="section-title">🏟 Stadiums</div>
+  if (section === 'VENUES') return (
+    <div className="screen-enter screen-scroll">
+      <div style={{padding:`calc(var(--safe-top) + 14px) 16px 12px`,
+        borderBottom:'1px solid var(--line)',display:'flex',
+        alignItems:'center',gap:12,background:'var(--bg-1)',
+        position:'sticky',top:0,zIndex:20}}>
+        <button onClick={() => setSection(null)} className="btn-ghost">← BACK</button>
+        <div className="chunky" style={{fontSize:20}}>VENUES</div>
       </div>
-      <div className="group-tabs" style={{marginBottom:10}}>
-        {countries.map(c => (
-          <div key={c} className={`group-tab ${venueFilter===c?'active':''}`} onClick={() => setVenueFilter(c)}>{c}</div>
-        ))}
-      </div>
-      {filtered.map(v => (
-        <div key={v.city} className="venue-card">
-          <div className="venue-flag">{v.flag}</div>
-          <div>
-            <div className="venue-name">{v.stadium}</div>
-            <div className="venue-city">{v.city}, {v.country}</div>
+      {['USA','CAN','MEX'].map(country => (
+        <div key={country}>
+          <SectionHeader label={country==='USA'?'UNITED STATES':country==='CAN'?'CANADA':'MEXICO'}/>
+          <div style={{padding:'0 16px'}}>
+            {VENUES.filter(v => v.country===country).map((v,i) => (
+              <div key={i} style={{display:'flex',justifyContent:'space-between',
+                alignItems:'flex-end',padding:'11px 0',
+                borderTop:'1px solid var(--line)'}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14}}>{v.stadium}</div>
+                  <div className="mono" style={{fontSize:10,color:'var(--ink-3)',
+                    letterSpacing:'0.08em',marginTop:3}}>{v.city}</div>
+                </div>
+                <div className="chunky" style={{fontSize:16,color:'var(--ink-2)'}}>{v.cap}</div>
+              </div>
+            ))}
           </div>
-          <div className="venue-cap">{v.capacity}</div>
+        </div>
+      ))}
+      <div style={{height:16}}/>
+    </div>
+  );
+
+  return (
+    <div className="screen-enter screen-scroll">
+      <div style={{padding:`calc(var(--safe-top) + 16px) 16px 12px`,
+        borderBottom:'1px solid var(--line)',background:'var(--bg-1)',
+        position:'sticky',top:0,zIndex:20}}>
+        <div className="mono caps" style={{fontSize:9,color:'var(--ink-3)',letterSpacing:'0.18em'}}>
+          WC26 APP
+        </div>
+        <div className="chunky" style={{fontSize:28,marginTop:4,letterSpacing:'-0.04em'}}>
+          MORE
+        </div>
+      </div>
+
+      {items.map((item,i) => (
+        <div key={i}
+          onClick={() => {
+            if (item.label==='VENUES') setSection('VENUES');
+            else if (item.label==='FORMAT') setSection('FORMAT');
+            else if (item.label==='ROOM CODE') onCopyRoom();
+            else if (item.label==='YOUR NAME') setShowNameEdit(true);
+          }}
+          style={{display:'grid',gridTemplateColumns:'32px 1fr 20px',
+            gap:12,alignItems:'center',padding:'16px',
+            borderBottom:'1px solid var(--line)',cursor:'pointer',
+            transition:'background .15s',background:'transparent'}}
+          onMouseEnter={e=>e.currentTarget.style.background='var(--bg-2)'}
+          onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+          <span className="mono" style={{fontSize:11,color:'var(--ink-3)',fontWeight:700}}>
+            {item.idx}
+          </span>
+          <div>
+            <div className="mono caps" style={{fontSize:12,fontWeight:700,letterSpacing:'0.1em'}}>
+              {item.label}
+            </div>
+            <div style={{fontSize:12,color:'var(--ink-2)',marginTop:3}}>{item.desc}</div>
+          </div>
+          <span style={{color:'var(--ink-3)',fontSize:14}}>›</span>
         </div>
       ))}
     </div>
@@ -1633,14 +1561,21 @@ function InfoTab() {
 // ══════════════════════════════════════════════════════════════════════════════
 // APP ROOT
 // ══════════════════════════════════════════════════════════════════════════════
+function getRoomCode() {
+  let c = localStorage.getItem('wc26_room');
+  if (!c) { c = Math.random().toString(36).slice(2,8).toUpperCase(); localStorage.setItem('wc26_room',c); }
+  return c;
+}
+
 function App() {
   const [tab, setTab] = useState('home');
   const [matches, setMatches] = useState([]);
-  const [username, setUsername] = useState(() => localStorage.getItem('wc26_user') || '');
+  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [username, setUsername] = useState(() => localStorage.getItem('wc26_user')||'');
   const [showSetup, setShowSetup] = useState(false);
   const [showNameEdit, setShowNameEdit] = useState(false);
   const [nameInput, setNameInput] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState(null);
   const roomCode = getRoomCode();
 
   useEffect(() => {
@@ -1648,102 +1583,115 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Init Firebase
-    initFirebase();
-    // Fetch matches
-    fetchFixtures().then(setMatches).catch(console.error);
-    // Poll live data
-    const interval = setInterval(() => {
-      fetchFixtures().then(setMatches).catch(console.error);
-    }, 30000);
-    return () => clearInterval(interval);
+    fetchMatches().then(setMatches).catch(console.error);
+    const t = setInterval(() => fetchMatches().then(setMatches).catch(console.error), 30000);
+    return () => clearInterval(t);
   }, []);
 
-  const handleSetup = (name) => {
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2000);
+  };
+
+  const handleSetupDone = (name) => {
     setUsername(name);
     localStorage.setItem('wc26_user', name);
     setShowSetup(false);
   };
 
   const handleCopyRoom = async () => {
-    const url = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch(e) {
-      alert(`Share this link:\n${url}`);
-    }
+    const url = `${location.origin}${location.pathname}?room=${roomCode}`;
+    try { await navigator.clipboard.writeText(url); showToast('LINK COPIED ✓'); }
+    catch { showToast(`ROOM: ${roomCode}`); }
   };
-
-  const navItems = [
-    { id: 'home', icon: icons.home, label: 'Home' },
-    { id: 'live', icon: icons.live, label: 'Scores' },
-    { id: 'table', icon: icons.table, label: 'Tables' },
-    { id: 'predict', icon: icons.predict, label: 'Predict' },
-    { id: 'battle', icon: icons.battle, label: 'Battle' },
-    { id: 'info', icon: icons.info, label: 'Info' },
-  ];
 
   return (
     <>
-      {showSetup && <SetupModal onDone={handleSetup} />}
-      {copied && (
-        <div style={{
-          position:'fixed',top:80,left:'50%',transform:'translateX(-50%)',
-          background:'var(--green)',color:'#000',borderRadius:30,padding:'8px 20px',
-          fontWeight:700,fontSize:14,zIndex:300,animation:'fadeIn 0.2s ease'
-        }}>
-          Link copied! ✓
-        </div>
-      )}
-
-      <div className="top-nav">
-        <div className="logo">WC<span>26</span></div>
-        <div
-          className={`username-badge ${username ? 'set' : ''}`}
-          onClick={() => { setNameInput(username); setShowNameEdit(true); }}
-        >
-          {username || 'Set name'}
-        </div>
-      </div>
-
-      {showNameEdit && (
-        <div className="modal-overlay" onClick={() => setShowNameEdit(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>Your Name</h2>
-            <p>This is shown to friends in the group leaderboard.</p>
-            <input
-              className="text-input"
-              value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && nameInput.trim() && (handleSetup(nameInput.trim()), setShowNameEdit(false))}
-              autoFocus
-            />
-            <button className="btn btn-gold btn-full" onClick={() => { handleSetup(nameInput.trim()); setShowNameEdit(false); }}>
-              Save
+      {/* Setup modal */}
+      {showSetup && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="mono caps" style={{fontSize:9,color:'var(--acc-red)',
+              letterSpacing:'0.18em',marginBottom:8}}>FIFA WORLD CUP 2026</div>
+            <h2>WELCOME TO WC26</h2>
+            <p>Your tournament companion for live scores, predictions, and match battles with friends.</p>
+            <input className="text-input" placeholder="Enter your name..."
+              value={nameInput} onChange={e=>setNameInput(e.target.value)}
+              onKeyDown={e=>e.key==='Enter'&&nameInput.trim()&&handleSetupDone(nameInput.trim())}
+              autoFocus/>
+            <button className="btn-primary"
+              disabled={!nameInput.trim()}
+              onClick={() => handleSetupDone(nameInput.trim())}>
+              LET'S GO →
             </button>
           </div>
         </div>
       )}
 
-      <div className="content">
-        {tab === 'home' && <HomeTab matches={matches} username={username} roomCode={roomCode} onCopyRoom={handleCopyRoom}/>}
-        {tab === 'live' && <LiveTab matches={matches}/>}
-        {tab === 'table' && <StandingsTab/>}
-        {tab === 'predict' && <PredictTab matches={matches} username={username} roomCode={roomCode}/>}
-        {tab === 'battle' && <BattleTab matches={matches} username={username} roomCode={roomCode}/>}
-        {tab === 'info' && <InfoTab/>}
+      {/* Name edit modal */}
+      {showNameEdit && (
+        <div className="modal-overlay" onClick={() => setShowNameEdit(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <h2>YOUR NAME</h2>
+            <p>Shown on the group leaderboard.</p>
+            <input className="text-input" value={nameInput}
+              onChange={e=>setNameInput(e.target.value)}
+              onKeyDown={e=>e.key==='Enter'&&nameInput.trim()&&(handleSetupDone(nameInput.trim()),setShowNameEdit(false))}
+              autoFocus/>
+            <button className="btn-primary"
+              onClick={() => { handleSetupDone(nameInput.trim()); setShowNameEdit(false); }}>
+              SAVE
+            </button>
+          </div>
+        </div>
+      )}
+
+      {toast && <div className="toast">{toast}</div>}
+
+      {/* Main content */}
+      <div style={{flex:1,overflow:'hidden',position:'relative'}}>
+        {selectedMatch ? (
+          <MatchDetailScreen match={selectedMatch} onBack={() => setSelectedMatch(null)}/>
+        ) : tab === 'home' ? (
+          <HomeScreen matches={matches} onMatchTap={setSelectedMatch}/>
+        ) : tab === 'standings' ? (
+          <StandingsScreen/>
+        ) : tab === 'predict' ? (
+          <PredictScreen matches={matches} username={username} roomCode={roomCode}/>
+        ) : tab === 'battle' ? (
+          <BattleScreen matches={matches} username={username}/>
+        ) : (
+          <MoreScreen username={username} setShowNameEdit={(v)=>{setNameInput(username);setShowNameEdit(v)}}
+            roomCode={roomCode} onCopyRoom={handleCopyRoom}/>
+        )}
       </div>
 
-      <nav className="bottom-nav">
-        {navItems.map(n => (
-          <button key={n.id} className={`nav-item ${tab===n.id?'active':''}`} onClick={() => setTab(n.id)}>
-            {n.icon}
-            {n.label}
-          </button>
-        ))}
-      </nav>
+      {/* Bottom nav */}
+      {!selectedMatch && (
+        <nav className="bottom-nav">
+          <div className="nav-tick-strip">
+            {TABS.map(t => (
+              <div key={t.k} className="nav-tick"
+                style={{background:tab===t.k?'var(--acc-red)':'transparent'}}/>
+            ))}
+          </div>
+          <div className="nav-tabs">
+            {TABS.map(t => {
+              const isActive = tab === t.k;
+              const c = isActive ? 'var(--ink-0)' : 'var(--ink-3)';
+              return (
+                <button key={t.k} className="nav-btn" onClick={() => setTab(t.k)}>
+                  {NAV_ICONS[t.k](c)}
+                  <span className="nav-label" style={{color:c,fontWeight:isActive?700:500}}>{t.l}</span>
+                  <span className="nav-idx" style={{color:isActive?'var(--acc-red)':'var(--ink-3)'}}>
+                    0{t.idx}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </>
   );
 }
