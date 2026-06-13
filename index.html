@@ -97,7 +97,7 @@ const { useState, useEffect, useRef, useCallback, useMemo } = React;
 // ═══════════════════════════════════════════════════════════════════════════════
 const WORKER_URL = 'https://wc26.marakding.workers.dev';
 const LEAGUE_ID  = 1;      // 1=World Cup, 5=Nations League
-const SEASON     = 2022;   // → 2026 on June 11
+const SEASON     = 2026;
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBOPCQ0QZqw9OjX5tjoIZDKD85R5JBGE9w",
@@ -156,8 +156,12 @@ async function saveProfile(user,data) { return fbSet(`users/${user}`,{...data,up
 function proxyUrl(path) { return `${WORKER_URL}/?url=${encodeURIComponent('https://v3.football.api-sports.io/'+path)}`; }
 async function apiGet(path) { const r=await fetch(proxyUrl(path)); const d=await r.json(); return d.response||[]; }
 async function fetchMatches() {
-  const p = SEASON>=2026?'next=20':'last=20';
-  return apiGet(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&${p}`);
+  if (SEASON >= 2026) {
+    const today = new Date().toISOString().slice(0,10);
+    const to = new Date(Date.now() + 90*24*60*60*1000).toISOString().slice(0,10);
+    return apiGet(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&from=${today}&to=${to}`);
+  }
+  return apiGet(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&last=20`);
 }
 async function fetchMatchDetail(id) {
   const [stats,events,lineups] = await Promise.all([
