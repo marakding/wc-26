@@ -209,14 +209,10 @@ function calcPredictionPoints(pred,actual) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SECTION 6 — HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
-function teamCode(name) {
-  const m={'France':'FRA','England':'ENG','Netherlands':'NED','Portugal':'POR','Brazil':'BRA','Argentina':'ARG','Germany':'GER','Spain':'ESP','Croatia':'CRO','Morocco':'MAR','Japan':'JPN','South Korea':'KOR','Mexico':'MEX','USA':'USA','Canada':'CAN','Italy':'ITA','Belgium':'BEL','Uruguay':'URU','Denmark':'DEN','Switzerland':'SUI','Poland':'POL','Serbia':'SRB','Ecuador':'ECU','Ghana':'GHA','Senegal':'SEN','Australia':'AUS','Wales':'WAL','Qatar':'QAT','Hungary':'HUN','Austria':'AUT','Norway':'NOR','Sweden':'SWE','Romania':'ROU','Slovakia':'SVK','Albania':'ALB','Georgia':'GEO','Finland':'FIN','Ireland':'IRL','Greece':'GRE','Slovenia':'SVN','Iceland':'ISL','Turkey':'TUR','Tunisia':'TUN','Saudi Arabia':'KSA','Iran':'IRN','South Africa':'RSA','Cameroon':'CMR','Czech Republic':'CZE','Bosnia & Herzegovina':'BIH','Paraguay':'PAR','Montenegro':'MNE',
-  'Colombia':'COL','Venezuela':'VEN','Chile':'CHI','Panama':'PAN','Costa Rica':'CRC','Honduras':'HON','Jamaica':'JAM','Guatemala':'GUA',
-  'Nigeria':'NGA','Egypt':'EGY','Ivory Coast':'CIV',"Côte d'Ivoire":'CIV','Mali':'MLI','DR Congo':'COD','Congo DR':'COD','Algeria':'ALG','Tanzania':'TZA','Zambia':'ZAM','Cape Verde':'CPV','Burkina Faso':'BFA','Uganda':'UGA',
-  'Ukraine':'UKR','Scotland':'SCO','North Macedonia':'MKD','Bosnia and Herzegovina':'BIH',
-  'Iraq':'IRQ','Jordan':'JOR','Indonesia':'IDN','Uzbekistan':'UZB','China':'CHN','Vietnam':'VIE','Oman':'OMA',
-  'United States':'USA','IR Iran':'IRN','Korea Republic':'KOR','Korea DPR':'PRK',
-  'Türkiye':'TUR','Turkey':'TUR','Haiti':'HAI','Curacao':'CUW','Curaçao':'CUW','New Zealand':'NZL','Cabo Verde':'CPV','Cape Verde Islands':'CPV','Cap-Vert':'CPV'};
+const TEAM_ID_CODE={1:'BEL',2:'FRA',3:'CRO',5:'SWE',6:'BRA',7:'URU',8:'COL',9:'ESP',10:'ENG',11:'PAN',12:'JPN',13:'SEN',15:'SUI',16:'MEX',17:'KOR',20:'AUS',22:'IRN',23:'KSA',25:'GER',26:'ARG',27:'POR',28:'TUN',31:'MAR',32:'EGY',770:'CZE',775:'AUT',777:'TUR',1090:'NOR',1108:'SCO',1113:'BIH',1118:'NED',1501:'CIV',1504:'GHA',1508:'COD',1531:'RSA',1532:'ALG',1533:'CPV',1548:'JOR',1567:'IRQ',1568:'UZB',1569:'QAT',2380:'PAR',2382:'ECU',2384:'USA',2386:'HAI',4673:'NZL',5529:'CAN',5530:'CUW'};
+function teamCode(name,id) {
+  if(id&&TEAM_ID_CODE[id])return TEAM_ID_CODE[id];
+  const m={'France':'FRA','England':'ENG','Netherlands':'NED','Portugal':'POR','Brazil':'BRA','Argentina':'ARG','Germany':'GER','Spain':'ESP','Croatia':'CRO','Morocco':'MAR','Japan':'JPN','South Korea':'KOR','Mexico':'MEX','USA':'USA','Canada':'CAN','Italy':'ITA','Belgium':'BEL','Uruguay':'URU','Denmark':'DEN','Switzerland':'SUI','Poland':'POL','Serbia':'SRB','Ecuador':'ECU','Ghana':'GHA','Senegal':'SEN','Australia':'AUS','Wales':'WAL','Qatar':'QAT','Hungary':'HUN','Austria':'AUT','Norway':'NOR','Sweden':'SWE','Romania':'ROU','Slovakia':'SVK','Albania':'ALB','Georgia':'GEO','Finland':'FIN','Ireland':'IRL','Greece':'GRE','Slovenia':'SVN','Iceland':'ISL','Turkey':'TUR','Tunisia':'TUN','Saudi Arabia':'KSA','Iran':'IRN','South Africa':'RSA','Cameroon':'CMR','Czech Republic':'CZE','Bosnia & Herzegovina':'BIH','Paraguay':'PAR','Montenegro':'MNE','Colombia':'COL','Venezuela':'VEN','Chile':'CHI','Panama':'PAN','Costa Rica':'CRC','Honduras':'HON','Jamaica':'JAM','Guatemala':'GUA','Nigeria':'NGA','Egypt':'EGY','Ivory Coast':'CIV',"Côte d'Ivoire":'CIV','Mali':'MLI','DR Congo':'COD','Congo DR':'COD','Algeria':'ALG','Ukraine':'UKR','Scotland':'SCO','Iraq':'IRQ','Jordan':'JOR','Uzbekistan':'UZB','Türkiye':'TUR','Haiti':'HAI','Curacao':'CUW','New Zealand':'NZL','Cape Verde Islands':'CPV'};
   return m[name]||name.slice(0,3).toUpperCase();
 }
 function isLive(s){return['1H','2H','HT','ET','BT','P','LIVE'].includes(s);}
@@ -494,7 +490,7 @@ function HomeScreen({matches,username,points,onMatchTap}) {
 
 function TickerCard({m,idx,total,onTap}) {
   const live=isLive(m.fixture.status.short),ft=isFT(m.fixture.status.short);
-  const hC=teamCode(m.teams.home.name),aC=teamCode(m.teams.away.name);
+  const hC=teamCode(m.teams.home.name,m.teams.home.id),aC=teamCode(m.teams.away.name,m.teams.away.id);
   return <div onClick={()=>onTap(m)} style={{minWidth:280,flexShrink:0,scrollSnapAlign:'start',padding:'8px 16px 20px',borderRight:'1px dashed var(--line-strong)',position:'relative',cursor:'pointer'}}>
     <span className="mono" style={{position:'absolute',top:8,right:16,fontSize:9,color:'var(--ink-3)',letterSpacing:'0.15em'}}>{String(idx+1).padStart(2,'0')}/{String(total).padStart(2,'0')}</span>
     <div style={{marginBottom:12}}>{live?<LiveTag min={m.fixture.status.elapsed}/>:ft?<StatusTag status={m.fixture.status.short}/>:<StatusTag status="UP" time={`${fmtDate(m.fixture.date)} · ${fmtKO(m.fixture.date)}`}/>}</div>
@@ -513,7 +509,7 @@ function TickerCard({m,idx,total,onTap}) {
 }
 
 function UpcomingRow({m,onTap}) {
-  const hC=teamCode(m.teams.home.name),aC=teamCode(m.teams.away.name);
+  const hC=teamCode(m.teams.home.name,m.teams.home.id),aC=teamCode(m.teams.away.name,m.teams.away.id);
   return <div onClick={()=>onTap(m)} style={{display:'grid',gridTemplateColumns:'64px 1fr',gap:12,alignItems:'center',padding:'12px 0',borderTop:'1px solid var(--line)',cursor:'pointer'}}>
     <div>
       <div className="chunky" style={{fontSize:16,lineHeight:1}}>{fmtKO(m.fixture.date)}</div>
@@ -531,7 +527,7 @@ function UpcomingRow({m,onTap}) {
 }
 
 function ResultRow({m,onTap}) {
-  const hC=teamCode(m.teams.home.name),aC=teamCode(m.teams.away.name);
+  const hC=teamCode(m.teams.home.name,m.teams.home.id),aC=teamCode(m.teams.away.name,m.teams.away.id);
   const hW=m.goals.home>m.goals.away,aW=m.goals.away>m.goals.home;
   return <div onClick={()=>onTap(m)} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderTop:'1px solid var(--line)',cursor:'pointer'}}>
     <TeamBlock code={hC} size={24}/>
@@ -557,7 +553,7 @@ function MatchDetailScreen({match:m,username,onBack}) {
   const [motmVote,setMotmVote]=useState(null);
   const liveMatch=isLive(m.fixture.status.short);
   const ftMatch=isFT(m.fixture.status.short);
-  const hC=teamCode(m.teams.home.name),aC=teamCode(m.teams.away.name);
+  const hC=teamCode(m.teams.home.name,m.teams.home.id),aC=teamCode(m.teams.away.name,m.teams.away.id);
   const elapsed=m.fixture.status.elapsed||0;
   const pct=Math.min((elapsed/90)*100,100);
   const {current:commCard,dismiss:dismissComm}=useCommentator(m,detail,liveMatch);
@@ -861,7 +857,7 @@ function PredictScreen({matches,username}) {
       const ns=isNS(m.fixture.status.short),ft=isFT(m.fixture.status.short);
       const result=pred&&!ns?calcPredictionPoints(pred,{home:m.goals.home,away:m.goals.away}):null;
       const inp=inputs[fid]||{};
-      const hC=teamCode(m.teams.home.name),aC=teamCode(m.teams.away.name);
+      const hC=teamCode(m.teams.home.name,m.teams.home.id),aC=teamCode(m.teams.away.name,m.teams.away.id);
       return <div key={fid} style={{borderBottom:'1px solid var(--line)',padding:'14px 16px'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
           <span className="mono caps" style={{fontSize:9,color:'var(--ink-3)',letterSpacing:'0.12em'}}>{m.league.round?.replace('Group Stage - ','GS ')||''}</span>
@@ -1053,7 +1049,7 @@ function BattleScreen({matches,username}) {
       {live.length===0
         ?<div style={{padding:'40px 0',textAlign:'center'}}><div className="mono caps" style={{fontSize:11,color:'var(--ink-3)',letterSpacing:'0.14em',lineHeight:2}}>NO LIVE MATCHES<br/>COME BACK DURING A GAME</div></div>
         :live.map(m=>{
-          const hC=teamCode(m.teams.home.name),aC=teamCode(m.teams.away.name);
+          const hC=teamCode(m.teams.home.name,m.teams.home.id),aC=teamCode(m.teams.away.name,m.teams.away.id);
           const called=callIt[m.fixture.id];
           return <div key={m.fixture.id} style={{paddingTop:16}}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
