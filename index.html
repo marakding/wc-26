@@ -210,7 +210,11 @@ function calcPredictionPoints(pred,actual) {
 // SECTION 6 — HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 function teamCode(name) {
-  const m={'France':'FRA','England':'ENG','Netherlands':'NED','Portugal':'POR','Brazil':'BRA','Argentina':'ARG','Germany':'GER','Spain':'ESP','Croatia':'CRO','Morocco':'MAR','Japan':'JPN','South Korea':'KOR','Mexico':'MEX','USA':'USA','Canada':'CAN','Italy':'ITA','Belgium':'BEL','Uruguay':'URU','Denmark':'DEN','Switzerland':'SUI','Poland':'POL','Serbia':'SRB','Ecuador':'ECU','Ghana':'GHA','Senegal':'SEN','Australia':'AUS','Wales':'WAL','Qatar':'QAT','Hungary':'HUN','Austria':'AUT','Norway':'NOR','Sweden':'SWE','Romania':'ROU','Slovakia':'SVK','Albania':'ALB','Georgia':'GEO','Finland':'FIN','Ireland':'IRL','Greece':'GRE','Slovenia':'SVN','Iceland':'ISL','Turkey':'TUR','Tunisia':'TUN','Saudi Arabia':'KSA','Iran':'IRN','South Africa':'RSA','Cameroon':'CMR','Czech Republic':'CZE','Bosnia & Herzegovina':'BIH','Paraguay':'PAR','Montenegro':'MNE'};
+  const m={'France':'FRA','England':'ENG','Netherlands':'NED','Portugal':'POR','Brazil':'BRA','Argentina':'ARG','Germany':'GER','Spain':'ESP','Croatia':'CRO','Morocco':'MAR','Japan':'JPN','South Korea':'KOR','Mexico':'MEX','USA':'USA','Canada':'CAN','Italy':'ITA','Belgium':'BEL','Uruguay':'URU','Denmark':'DEN','Switzerland':'SUI','Poland':'POL','Serbia':'SRB','Ecuador':'ECU','Ghana':'GHA','Senegal':'SEN','Australia':'AUS','Wales':'WAL','Qatar':'QAT','Hungary':'HUN','Austria':'AUT','Norway':'NOR','Sweden':'SWE','Romania':'ROU','Slovakia':'SVK','Albania':'ALB','Georgia':'GEO','Finland':'FIN','Ireland':'IRL','Greece':'GRE','Slovenia':'SVN','Iceland':'ISL','Turkey':'TUR','Tunisia':'TUN','Saudi Arabia':'KSA','Iran':'IRN','South Africa':'RSA','Cameroon':'CMR','Czech Republic':'CZE','Bosnia & Herzegovina':'BIH','Paraguay':'PAR','Montenegro':'MNE',
+  'Colombia':'COL','Venezuela':'VEN','Chile':'CHI','Panama':'PAN','Costa Rica':'CRC','Honduras':'HON','Jamaica':'JAM','Guatemala':'GUA',
+  'Nigeria':'NGA','Egypt':'EGY','Ivory Coast':'CIV',"Côte d'Ivoire":'CIV','Mali':'MLI','DR Congo':'COD','Congo DR':'COD','Algeria':'ALG','Tanzania':'TZA','Zambia':'ZAM','Cape Verde':'CPV','Burkina Faso':'BFA','Uganda':'UGA',
+  'Ukraine':'UKR','Scotland':'SCO',
+  'Iraq':'IRQ','Jordan':'JOR','Indonesia':'IDN','Uzbekistan':'UZB','China':'CHN','Vietnam':'VIE','Oman':'OMA'};
   return m[name]||name.slice(0,3).toUpperCase();
 }
 function isLive(s){return['1H','2H','HT','ET','BT','P','LIVE'].includes(s);}
@@ -276,7 +280,34 @@ const FLAGS = {
   SVK:()=><><rect width="36" height="8" fill="#fff"/><rect y="8" width="36" height="8" fill="#0b4ea2"/><rect y="16" width="36" height="8" fill="#ee1c25"/></>,
   PAR:()=><><rect width="36" height="8" fill="#d52b1e"/><rect y="8" width="36" height="8" fill="#fff"/><rect y="16" width="36" height="8" fill="#009b48"/></>,
   MNE:()=><><rect width="36" height="24" fill="#d4282a"/></>,
-  POL:()=><><rect width="36" height="12" fill="#fff"/><rect y="12" width="36" height="12" fill="#dc143c"/></>,
+  COL:()=><><rect width="36" height="12" fill="#fcd116"/><rect y="12" width="36" height="6" fill="#003893"/><rect y="18" width="36" height="6" fill="#ce1126"/></>,
+  VEN:()=><><rect width="36" height="8" fill="#cf142b"/><rect y="8" width="36" height="8" fill="#00247d"/><rect y="16" width="36" height="8" fill="#fcd116"/></>,
+  CHI:()=><><rect width="36" height="12" fill="#fff"/><rect y="12" width="36" height="12" fill="#d52b1e"/><rect width="14" height="12" fill="#002d62"/><circle cx="7" cy="6" r="2.5" fill="#fff"/></>,
+  PAN:()=><><rect width="18" height="12" fill="#fff"/><rect x="18" width="18" height="12" fill="#db121a"/><rect y="12" width="18" height="12" fill="#005293"/><rect x="18" y="12" width="18" height="12" fill="#fff"/></>,
+  CRC:()=><><rect width="36" height="5" fill="#002b7f"/><rect y="5" width="36" height="4" fill="#fff"/><rect y="9" width="36" height="6" fill="#ce1126"/><rect y="15" width="36" height="4" fill="#fff"/><rect y="19" width="36" height="5" fill="#002b7f"/></>,
+  HON:()=><><rect width="36" height="8" fill="#0073cf"/><rect y="8" width="36" height="8" fill="#fff"/><rect y="16" width="36" height="8" fill="#0073cf"/></>,
+  JAM:()=><><polygon points="0,0 18,12 0,24" fill="#000"/><polygon points="36,0 18,12 36,24" fill="#000"/><polygon points="0,0 36,0 18,12" fill="#009b3a"/><polygon points="0,24 36,24 18,12" fill="#009b3a"/><path d="M0 0L36 0L18 12ZM0 24L36 24L18 12Z" fill="#ffd100"/><line x1="0" y1="0" x2="36" y2="24" stroke="#ffd100" strokeWidth="4"/><line x1="36" y1="0" x2="0" y2="24" stroke="#ffd100" strokeWidth="4"/></>,
+  GUA:()=><><rect width="12" height="24" fill="#4997d0"/><rect x="12" width="12" height="24" fill="#fff"/><rect x="24" width="12" height="24" fill="#4997d0"/></>,
+  NGA:()=><><rect width="12" height="24" fill="#008751"/><rect x="12" width="12" height="24" fill="#fff"/><rect x="24" width="12" height="24" fill="#008751"/></>,
+  EGY:()=><><rect width="36" height="8" fill="#ce1126"/><rect y="8" width="36" height="8" fill="#fff"/><rect y="16" width="36" height="8" fill="#000"/></>,
+  CIV:()=><><rect width="12" height="24" fill="#f77f00"/><rect x="12" width="12" height="24" fill="#fff"/><rect x="24" width="12" height="24" fill="#009a44"/></>,
+  MLI:()=><><rect width="12" height="24" fill="#14b53a"/><rect x="12" width="12" height="24" fill="#fcd116"/><rect x="24" width="12" height="24" fill="#ce1126"/></>,
+  COD:()=><><rect width="36" height="24" fill="#007fff"/><line x1="0" y1="24" x2="36" y2="0" stroke="#ce1126" strokeWidth="5"/><circle cx="3" cy="21" r="3" fill="#f7d618"/></>,
+  ALG:()=><><rect width="18" height="24" fill="#006233"/><rect x="18" width="18" height="24" fill="#fff"/><circle cx="20" cy="12" r="5" fill="#006233"/><circle cx="22" cy="12" r="5" fill="#fff"/><polygon points="22,7 23.2,10.6 27,10.6 24,12.8 25.2,16.4 22,14.2 18.8,16.4 20,12.8 17,10.6 20.8,10.6" fill="#d21034"/></>,
+  TZA:()=><><rect width="36" height="24" fill="#1eb53a"/><rect x="0" y="24" width="36" height="0" fill="#00a3dd"/><polygon points="0,24 36,0 36,24" fill="#00a3dd"/><line x1="0" y1="24" x2="36" y2="0" stroke="#000" strokeWidth="6"/><line x1="0" y1="24" x2="36" y2="0" stroke="#ffd100" strokeWidth="3"/></>,
+  ZAM:()=><><rect width="36" height="24" fill="#198a00"/><rect x="27" width="9" height="24" fill="#ef7d00"/><rect x="30" width="3" height="24" fill="#000"/><rect x="33" width="3" height="24" fill="#de0000"/></>,
+  CPV:()=><><rect width="36" height="24" fill="#003893"/><rect y="14" width="36" height="4" fill="#fff"/><rect y="18" width="36" height="2" fill="#cf2027"/><rect y="12" width="36" height="2" fill="#cf2027"/></>,
+  BFA:()=><><rect width="36" height="12" fill="#ef2b2d"/><rect y="12" width="36" height="12" fill="#009a00"/><polygon points="18,8 19.5,13 24,13 20.5,16 22,21 18,18 14,21 15.5,16 12,13 16.5,13" fill="#fcd116"/></>,
+  UGA:()=><><rect width="36" height="8" fill="#000"/><rect y="8" width="36" height="8" fill="#fcdc04"/><rect y="16" width="36" height="8" fill="#de3908"/></>,
+  UKR:()=><><rect width="36" height="12" fill="#005bbb"/><rect y="12" width="36" height="12" fill="#ffd500"/></>,
+  SCO:()=><><rect width="36" height="24" fill="#003087"/><line x1="0" y1="0" x2="36" y2="24" stroke="#fff" strokeWidth="5"/><line x1="36" y1="0" x2="0" y2="24" stroke="#fff" strokeWidth="5"/></>,
+  IRQ:()=><><rect width="36" height="8" fill="#ce1126"/><rect y="8" width="36" height="8" fill="#fff"/><rect y="16" width="36" height="8" fill="#000"/></>,
+  JOR:()=><><rect width="36" height="8" fill="#007a3d"/><rect y="8" width="36" height="8" fill="#fff"/><rect y="16" width="36" height="8" fill="#000"/><polygon points="0,0 16,12 0,24" fill="#ce1126"/><circle cx="9" cy="12" r="2" fill="#fff"/></>,
+  IDN:()=><><rect width="36" height="12" fill="#ce1126"/><rect y="12" width="36" height="12" fill="#fff"/></>,
+  UZB:()=><><rect width="36" height="8" fill="#1eb53a"/><rect y="8" width="36" height="2" fill="#fff"/><rect y="10" width="36" height="4" fill="#ce2028"/><rect y="14" width="36" height="2" fill="#fff"/><rect y="16" width="36" height="8" fill="#009fca"/></>,
+  CHN:()=><><rect width="36" height="24" fill="#de2910"/><polygon points="6,3 7.2,6.6 11,6.6 8,8.8 9.2,12.4 6,10.2 2.8,12.4 4,8.8 1,6.6 4.8,6.6" fill="#ffde00"/></>,
+  VIE:()=><><rect width="36" height="24" fill="#da251d"/><polygon points="18,6 19.8,11.4 25.5,11.4 21,14.6 22.8,20 18,16.8 13.2,20 15,14.6 10.5,11.4 16.2,11.4" fill="#ffff00"/></>,
+  OMA:()=><><rect width="36" height="8" fill="#fff"/><rect y="8" width="36" height="8" fill="#db161b"/><rect y="16" width="36" height="8" fill="#008000"/><rect width="10" height="24" fill="#db161b"/></>,
   __default:()=><><rect width="36" height="24" fill="#262b35"/><rect x="15" width="6" height="24" fill="#30363f"/><rect y="9" width="36" height="6" fill="#30363f"/></>,
 };
 
@@ -788,9 +819,11 @@ function PredictScreen({matches,username}) {
 
   const predictable=matches.filter(m=>['NS','1H','2H','HT','ET','BT','P','FT','AET','PEN'].includes(m.fixture.status.short));
   const save=async(fid)=>{
+    if(!username)return;
     const inp=inputs[fid]||{};
     if(inp.home===undefined||inp.away===undefined)return;
     setSaving(fid);
+    setPreds(p=>({...p,[fid]:{home:inp.home,away:inp.away,ts:Date.now()}}));
     await savePrediction(username,fid,inp.home,inp.away);
     setSaving(null);
   };
@@ -935,9 +968,10 @@ function BattleScreen({matches,username}) {
 
   const voteOnPoll=async(pid,opt)=>{if(pollVotes[pid])return;await savePollVote(username,pid,opt);};
   const answerQuiz=async(qid,idx)=>{
-    if(quizAnswers[qid])return;
+    if(quizAnswers[qid]||!username)return;
     const correct=idx===todayQ.correct;
     const speedBonus=Object.keys(quizData[qid]||{}).length<3;
+    setQuizAnswers(p=>({...p,[qid]:{answer:idx,correct,speedBonus,ts:Date.now()}}));
     await saveQuizAnswer(username,qid,idx,correct,speedBonus);
     if(correct){
       const cur=leaderboard.find(u=>u.name===username)?.pts||0;
