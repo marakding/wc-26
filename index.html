@@ -823,11 +823,13 @@ function PredictScreen({matches,username}) {
   const predictable=matches.filter(m=>['NS','1H','2H','HT','ET','BT','P','FT','AET','PEN'].includes(m.fixture.status.short));
   const save=async(fid)=>{
     if(!username)return;
-    const inp=inputs[fid]||{};
-    if(inp.home===undefined||inp.away===undefined)return;
+    const inp=inputs[fid]||{},cur=preds[fid]||{};
+    const home=inp.home??cur.home,away=inp.away??cur.away;
+    if(home===undefined||away===undefined)return;
     setSaving(fid);
-    setPreds(p=>({...p,[fid]:{home:inp.home,away:inp.away,ts:Date.now()}}));
-    await savePrediction(username,fid,inp.home,inp.away);
+    setPreds(p=>({...p,[fid]:{home,away,ts:Date.now()}}));
+    await savePrediction(username,fid,home,away);
+    setInputs(p=>{const n={...p};delete n[fid];return n;});
     setSaving(null);
   };
   const setInp=(fid,side,val)=>{
@@ -871,16 +873,17 @@ function PredictScreen({matches,username}) {
               <div className="mono" style={{fontSize:9,color:'var(--ink-3)'}}>{m.teams.home.name.slice(0,10).toUpperCase()}</div>
             </div>
           </div>
-          {!pred&&ns?(
+          {ns?(
             <div style={{display:'flex',alignItems:'center',gap:5}}>
-              {['home','away'].map((side,i)=>(
-                <React.Fragment key={side}>
+              {['home','away'].map((side,i)=>{
+                const val=inp[side]??pred?.[side];
+                return <React.Fragment key={side}>
                   {i>0&&<span className="mono" style={{color:'var(--ink-3)',fontSize:16}}>–</span>}
                   <input type="number" min="0" max="20"
-                    style={{width:42,height:42,background:'var(--bg-3)',border:`1px solid ${inp[side]!==undefined?'var(--acc-red)':'var(--line-strong)'}`,color:'var(--ink-0)',fontFamily:'var(--f-mono)',fontWeight:700,fontSize:20,textAlign:'center',outline:'none'}}
-                    value={inp[side]??''} onChange={e=>setInp(fid,side,e.target.value)} placeholder="0"/>
-                </React.Fragment>
-              ))}
+                    style={{width:42,height:42,background:'var(--bg-3)',border:`1px solid ${val!==undefined?'var(--acc-red)':'var(--line-strong)'}`,color:'var(--ink-0)',fontFamily:'var(--f-mono)',fontWeight:700,fontSize:20,textAlign:'center',outline:'none'}}
+                    value={val??''} onChange={e=>setInp(fid,side,e.target.value)} placeholder="0"/>
+                </React.Fragment>;
+              })}
             </div>
           ):(
             <div style={{textAlign:'center'}}>
@@ -897,12 +900,12 @@ function PredictScreen({matches,username}) {
             <TeamBlock code={aC} size={26}/>
           </div>
         </div>
-        {!pred&&ns&&<div style={{marginTop:10}}>
-          <button className="btn-primary" disabled={inp.home===undefined||inp.away===undefined||saving===fid} onClick={()=>save(fid)} style={{fontSize:11,padding:'9px',letterSpacing:'0.14em'}}>
-            {saving===fid?'SAVING...':'LOCK IN 🔒'}
+        {ns&&<div style={{marginTop:10}}>
+          <button className="btn-primary" disabled={(inp.home??pred?.home)===undefined||(inp.away??pred?.away)===undefined||saving===fid} onClick={()=>save(fid)} style={{fontSize:11,padding:'9px',letterSpacing:'0.14em'}}>
+            {saving===fid?'SAVING...':pred?'UPDATE PICK ✎':'LOCK IN 🔒'}
           </button>
         </div>}
-        {pred&&ns&&<div className="mono caps" style={{marginTop:8,fontSize:9,color:'var(--acc-grn)',letterSpacing:'0.12em'}}>✓ LOCKED: {pred.home}–{pred.away}</div>}
+        {pred&&ns&&<div className="mono caps" style={{marginTop:8,fontSize:9,color:'var(--acc-grn)',letterSpacing:'0.12em'}}>✓ SAVED: {pred.home}–{pred.away} · CHANGE ANYTIME BEFORE KICK-OFF</div>}
       </div>;
     })}
     <div style={{height:16}}/>
@@ -1278,7 +1281,7 @@ function App() {
 
     {toast&&<div className="toast">{toast}</div>}
 
-    <div style={{flex:1,overflow:'hidden',position:'relative'}}>
+    <div style={{flex:1,overflow:'hidden',position:'relative',display:'flex',flexDirection:'column'}}>
       {match
         ?<MatchDetailScreen match={match} username={username} onBack={()=>setMatch(null)}/>
         :tab==='home'?<HomeScreen matches={matches} username={username} points={userPts} onMatchTap={setMatch}/>

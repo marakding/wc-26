@@ -93,7 +93,9 @@ For phase "halftime" analyze the first half stats you've been given.`;
 
       const apiRes = await fetch(h2hUrl, { headers: { 'x-apisports-key': env.API_KEY } });
       const data = await apiRes.text();
-      await env.WC26_CACHE.put(cacheKey, data, { expirationTtl: 3600 }); // 1hr cache for h2h
+      if (apiRes.ok && !hasApiError(data)) {
+        await env.WC26_CACHE.put(cacheKey, data, { expirationTtl: 3600 }); // 1hr cache for h2h
+      }
       return new Response(data, {
         headers: { ...CORS, 'Content-Type': 'application/json', 'X-Cache': 'MISS' },
       });
@@ -118,13 +120,27 @@ For phase "halftime" analyze the first half stats you've been given.`;
 
     const apiRes = await fetch(target, { headers: { 'x-apisports-key': env.API_KEY } });
     const data = await apiRes.text();
-    await env.WC26_CACHE.put(target, data, { expirationTtl: ttl });
+    // Never cache error responses (rate limits, plan restrictions) — otherwise a
+    // transient error gets served for the full TTL and the UI shows blank data.
+    if (apiRes.ok && !hasApiError(data)) {
+      await env.WC26_CACHE.put(target, data, { expirationTtl: ttl });
+    }
 
     return new Response(data, {
       headers: { ...CORS, 'Content-Type': 'application/json', 'X-Cache': 'MISS' },
     });
   },
 };
+
+// API-Football returns errors either as a non-empty object or array under "errors".
+function hasApiError(text) {
+  try {
+    const j = JSON.parse(text);
+    const e = j.errors;
+    if (!e) return false;
+    return Array.isArray(e) ? e.length > 0 : Object.keys(e).length > 0;
+  } catch { return true; } // unparseable → don't cache
+}
 
 // ── Prompt builder ─────────────────────────────────────────────────────────
 function buildPrompt(ctx, factType, phase) {
