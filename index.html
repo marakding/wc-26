@@ -98,6 +98,8 @@ const { useState, useEffect, useRef, useCallback, useMemo } = React;
 const WORKER_URL = 'https://wc26.marakding.workers.dev';
 const LEAGUE_ID  = 1;      // 1=World Cup, 5=Nations League
 const SEASON     = 2026;
+const TOURNAMENT_START = '2026-06-01';   // covers the whole WC 2026 fixture list
+const TOURNAMENT_END   = '2026-07-31';
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBOPCQ0QZqw9OjX5tjoIZDKD85R5JBGE9w",
@@ -110,7 +112,7 @@ const FIREBASE_CONFIG = {
 };
 
 const PTS = {
-  EXACT_SCORE:3, CORRECT_OUTCOME:1, CALL_IT:2,
+  EXACT_SCORE:3, GOAL_DIFF:2, CORRECT_OUTCOME:1, CALL_IT:2,
   QUIZ_CORRECT:2, QUIZ_SPEED_BONUS:1,
   STREAK_3:2, PERFECT_MATCHDAY:5,
   GOLDEN_BOOT:10, DARK_HORSE:8, MOTM_MAJORITY:1,
@@ -157,9 +159,9 @@ function proxyUrl(path) { return `${WORKER_URL}/?url=${encodeURIComponent('https
 async function apiGet(path) { const r=await fetch(proxyUrl(path)); const d=await r.json(); return d.response||[]; }
 async function fetchMatches() {
   if (SEASON >= 2026) {
-    const today = new Date().toISOString().slice(0,10);
-    const to = new Date(Date.now() + 90*24*60*60*1000).toISOString().slice(0,10);
-    return apiGet(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&from=${today}&to=${to}`);
+    // Whole-tournament window so finished matches stay loaded (needed to keep
+    // locked prediction points on the leaderboard), not just the next 90 days.
+    return apiGet(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&from=${TOURNAMENT_START}&to=${TOURNAMENT_END}`);
   }
   return apiGet(`fixtures?league=${LEAGUE_ID}&season=${SEASON}&last=20`);
 }
@@ -199,11 +201,30 @@ async function fetchH2H(id1,id2) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function calcPredictionPoints(pred,actual) {
   if (actual.home==null) return null;
-  if (pred.home===actual.home&&pred.away===actual.away) return {pts:PTS.EXACT_SCORE,label:'EXACT +3',type:'exact'};
+  if (pred.home===actual.home&&pred.away===actual.away) return {pts:PTS.EXACT_SCORE,label:`EXACT +${PTS.EXACT_SCORE}`,type:'exact'};
+  // Correct goal difference (e.g. predicted 2-1, actual 3-2) — also implies correct winner/draw
+  if (pred.home-pred.away===actual.home-actual.away) return {pts:PTS.GOAL_DIFF,label:`GOAL DIFF +${PTS.GOAL_DIFF}`,type:'gd'};
   const rr=actual.home>actual.away?'H':actual.home<actual.away?'A':'D';
   const pr=pred.home>pred.away?'H':pred.home<pred.away?'A':'D';
-  if (rr===pr) return {pts:PTS.CORRECT_OUTCOME,label:'WINNER +1',type:'outcome'};
+  if (rr===pr) return {pts:PTS.CORRECT_OUTCOME,label:`WINNER +${PTS.CORRECT_OUTCOME}`,type:'outcome'};
   return {pts:0,label:'WRONG +0',type:'wrong'};
+}
+// Sum a user's prediction points across all live/finished matches (live = provisional,
+// finished = locked because the score no longer changes). Returns {pred, exact, live}.
+function computePredPoints(allPreds,matches,name) {
+  let pred=0,exact=0,live=0;
+  (matches||[]).forEach(m=>{
+    const st=m.fixture.status.short;
+    if(!isLive(st)&&!isFT(st))return;
+    const p=allPreds?.[m.fixture.id]?.[name];
+    if(!p)return;
+    const r=calcPredictionPoints(p,{home:m.goals.home,away:m.goals.away});
+    if(!r)return;
+    pred+=r.pts;
+    if(r.type==='exact')exact++;
+    if(isLive(st))live+=r.pts;
+  });
+  return {pred,exact,live};
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -843,7 +864,7 @@ function PredictScreen({matches,username}) {
       <div className="title">PREDICTIONS</div>
     </div>
     <div style={{padding:'10px 16px',borderBottom:'1px solid var(--line)',display:'flex',gap:16,flexWrap:'wrap'}}>
-      {[{c:'var(--acc-grn)',l:'EXACT SCORE',p:'+3'},{c:'oklch(0.72 0.14 85)',l:'WINNER',p:'+1'},{c:'var(--ink-3)',l:'WRONG',p:'+0'}].map((x,i)=>(
+      {[{c:'var(--acc-grn)',l:'EXACT SCORE',p:`+${PTS.EXACT_SCORE}`},{c:'oklch(0.72 0.15 200)',l:'GOAL DIFF',p:`+${PTS.GOAL_DIFF}`},{c:'oklch(0.72 0.14 85)',l:'WINNER',p:`+${PTS.CORRECT_OUTCOME}`},{c:'var(--ink-3)',l:'WRONG',p:'+0'}].map((x,i)=>(
         <div key={i} style={{display:'flex',alignItems:'center',gap:6}}>
           <span style={{width:2,height:10,background:x.c}}/>
           <span className="mono caps" style={{fontSize:9,color:'var(--ink-2)',letterSpacing:'0.1em'}}>{x.l} <strong style={{color:x.c}}>{x.p} PTS</strong></span>
@@ -889,7 +910,7 @@ function PredictScreen({matches,username}) {
             <div style={{textAlign:'center'}}>
               {ft&&<div className="mono" style={{fontSize:9,color:'var(--ink-3)',marginBottom:2,letterSpacing:'0.1em'}}>ACTUAL {m.goals.home}–{m.goals.away}</div>}
               <div className="chunky" style={{fontSize:26,color:pred?'var(--ink-0)':'var(--ink-3)'}}>{pred?`${pred.home}–${pred.away}`:`${m.goals.home??'?'}–${m.goals.away??'?'}`}</div>
-              {result&&<div className="mono caps" style={{fontSize:9,fontWeight:700,marginTop:3,letterSpacing:'0.1em',color:result.type==='exact'?'var(--acc-grn)':result.type==='outcome'?'oklch(0.72 0.14 85)':'var(--acc-red)'}}>{result.label}</div>}
+              {result&&<div className="mono caps" style={{fontSize:9,fontWeight:700,marginTop:3,letterSpacing:'0.1em',color:result.type==='exact'?'var(--acc-grn)':result.type==='gd'?'oklch(0.72 0.15 200)':result.type==='outcome'?'oklch(0.72 0.14 85)':'var(--acc-red)'}}>{result.label}</div>}
             </div>
           )}
           <div style={{display:'flex',alignItems:'center',gap:8,justifyContent:'flex-end'}}>
@@ -940,7 +961,8 @@ function BattleScreen({matches,username}) {
   const [callIt,setCallIt]=useState({});
   const [quizAnswers,setQuizAnswers]=useState({});
   const [quizData,setQuizData]=useState({});
-  const [leaderboard,setLeaderboard]=useState([]);
+  const [allUsers,setAllUsers]=useState({});
+  const [allPreds,setAllPreds]=useState({});
   const live=matches.filter(m=>isLive(m.fixture.status.short));
   const todayQ=DAILY_QUIZ[new Date().getDate()%DAILY_QUIZ.length];
 
@@ -966,11 +988,21 @@ function BattleScreen({matches,username}) {
       Object.entries(data).forEach(([qid,users])=>{if(users[username])mine[qid]=users[username];});
       setQuizAnswers(mine);
     });
-    fbListen('users',users=>{
-      if(!users)return;
-      setLeaderboard(Object.entries(users).map(([name,d])=>({name,pts:d.totalPoints||0})).sort((a,b)=>b.pts-a.pts));
-    });
+    fbListen('users',users=>setAllUsers(users||{}));
+    fbListen('predictions',data=>setAllPreds(data||{}));
   },[username]);
+
+  // Live leaderboard: stored quiz/other points + prediction points computed from
+  // current match scores (provisional while live, locked once finished).
+  const leaderboard=useMemo(()=>{
+    const names=new Set(Object.keys(allUsers));
+    Object.values(allPreds).forEach(u=>Object.keys(u||{}).forEach(n=>names.add(n)));
+    return [...names].map(name=>{
+      const quiz=allUsers[name]?.totalPoints||0;
+      const {pred,exact,live}=computePredPoints(allPreds,matches,name);
+      return {name,quiz,pred,live,exact,pts:quiz+pred};
+    }).sort((a,b)=>b.pts-a.pts||b.exact-a.exact||a.name.localeCompare(b.name));
+  },[allUsers,allPreds,matches]);
 
   const voteOnPoll=async(pid,opt)=>{if(pollVotes[pid])return;await savePollVote(username,pid,opt);};
   const answerQuiz=async(qid,idx)=>{
@@ -980,7 +1012,7 @@ function BattleScreen({matches,username}) {
     setQuizAnswers(p=>({...p,[qid]:{answer:idx,correct,speedBonus,ts:Date.now()}}));
     await saveQuizAnswer(username,qid,idx,correct,speedBonus);
     if(correct){
-      const cur=leaderboard.find(u=>u.name===username)?.pts||0;
+      const cur=allUsers[username]?.totalPoints||0;
       await fbSet(`users/${username}/totalPoints`,cur+PTS.QUIZ_CORRECT+(speedBonus?PTS.QUIZ_SPEED_BONUS:0));
     }
   };
@@ -1082,12 +1114,20 @@ function BattleScreen({matches,username}) {
 
     {section==='BOARD'&&<div style={{padding:'0 16px'}}>
       <SectionHeader num={1} label="LEADERBOARD"/>
+      <div className="mono caps" style={{fontSize:9,color:'var(--ink-3)',letterSpacing:'0.1em',marginBottom:12}}>
+        EXACT +{PTS.EXACT_SCORE} · GOAL DIFF +{PTS.GOAL_DIFF} · WINNER +{PTS.CORRECT_OUTCOME} · {live.length>0?<span style={{color:'var(--acc-red)'}}>● LIVE — POINTS UPDATING</span>:'LOCKS AT FULL-TIME'}
+      </div>
       {leaderboard.length===0
         ?<div style={{padding:'20px 0',fontFamily:'var(--f-mono)',fontSize:11,color:'var(--ink-3)',letterSpacing:'0.1em'}}>NO SCORES YET — START PREDICTING!</div>
         :leaderboard.map((row,i)=>(
           <div key={row.name} style={{display:'flex',alignItems:'center',gap:12,padding:'12px',marginBottom:6,background:row.name===username?'color-mix(in oklch,var(--acc-red) 10%,transparent)':'var(--bg-2)',border:`1px solid ${row.name===username?'color-mix(in oklch,var(--acc-red) 30%,transparent)':'var(--line)'}`}}>
             <div className="chunky" style={{fontSize:20,width:28,color:i===0?'var(--acc-gold)':i===1?'var(--ink-1)':i===2?'oklch(0.72 0.14 85)':'var(--ink-3)'}}>{String(i+1).padStart(2,'0')}</div>
-            <div style={{flex:1}}><div style={{fontWeight:600,fontSize:15}}>{row.name}{row.name===username?' (you)':''}</div></div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:600,fontSize:15}}>{row.name}{row.name===username?' (you)':''}</div>
+              <div className="mono" style={{fontSize:9,color:'var(--ink-3)',letterSpacing:'0.08em',marginTop:2}}>
+                {row.pred} PRED · {row.quiz} QUIZ{row.exact>0?` · ${row.exact}× EXACT`:''}{row.live>0?<span style={{color:'var(--acc-red)'}}> · +{row.live} LIVE</span>:''}
+              </div>
+            </div>
             <div style={{textAlign:'right'}}>
               <div className="chunky" style={{fontSize:26,color:'var(--acc-gold)'}}>{row.pts}</div>
               <div className="mono" style={{fontSize:9,color:'var(--ink-3)',letterSpacing:'0.1em'}}>PTS</div>
@@ -1214,6 +1254,7 @@ function App() {
   const [match,setMatch]=useState(null);
   const [username,setUsername]=useState('');
   const [userPts,setUserPts]=useState(0);
+  const [allPreds,setAllPreds]=useState({});
   const [showSetup,setShowSetup]=useState(false);
   const [showNameEdit,setShowNameEdit]=useState(false);
   const [nameInput,setNameInput]=useState('');
@@ -1232,7 +1273,11 @@ function App() {
     } else {
       setShowSetup(true);
     }
+    fbListen('predictions',d=>setAllPreds(d||{}));
   },[]);
+
+  // Total shown in the header = stored quiz/other points + live prediction points.
+  const totalPts=useMemo(()=>userPts+(username?computePredPoints(allPreds,matches,username).pred:0),[userPts,allPreds,matches,username]);
 
   useEffect(()=>{
     fetchMatches().then(setMatches).catch(console.error);
@@ -1284,7 +1329,7 @@ function App() {
     <div style={{flex:1,overflow:'hidden',position:'relative',display:'flex',flexDirection:'column'}}>
       {match
         ?<MatchDetailScreen match={match} username={username} onBack={()=>setMatch(null)}/>
-        :tab==='home'?<HomeScreen matches={matches} username={username} points={userPts} onMatchTap={setMatch}/>
+        :tab==='home'?<HomeScreen matches={matches} username={username} points={totalPts} onMatchTap={setMatch}/>
         :tab==='standings'?<StandingsScreen/>
         :tab==='predict'?<PredictScreen matches={matches} username={username}/>
         :tab==='battle'?<BattleScreen matches={matches} username={username}/>
