@@ -215,7 +215,8 @@ function teamCode(name) {
   'Nigeria':'NGA','Egypt':'EGY','Ivory Coast':'CIV',"Côte d'Ivoire":'CIV','Mali':'MLI','DR Congo':'COD','Congo DR':'COD','Algeria':'ALG','Tanzania':'TZA','Zambia':'ZAM','Cape Verde':'CPV','Burkina Faso':'BFA','Uganda':'UGA',
   'Ukraine':'UKR','Scotland':'SCO','North Macedonia':'MKD','Bosnia and Herzegovina':'BIH',
   'Iraq':'IRQ','Jordan':'JOR','Indonesia':'IDN','Uzbekistan':'UZB','China':'CHN','Vietnam':'VIE','Oman':'OMA',
-  'United States':'USA','IR Iran':'IRN','Korea Republic':'KOR','Korea DPR':'PRK'};
+  'United States':'USA','IR Iran':'IRN','Korea Republic':'KOR','Korea DPR':'PRK',
+  'Türkiye':'TUR','Turkey':'TUR','Haiti':'HAI','Curacao':'CUW','Curaçao':'CUW','New Zealand':'NZL','Cabo Verde':'CPV'};
   return m[name]||name.slice(0,3).toUpperCase();
 }
 function isLive(s){return['1H','2H','HT','ET','BT','P','LIVE'].includes(s);}
@@ -311,6 +312,9 @@ const FLAGS = {
   OMA:()=><><rect width="36" height="8" fill="#fff"/><rect y="8" width="36" height="8" fill="#db161b"/><rect y="16" width="36" height="8" fill="#008000"/><rect width="10" height="24" fill="#db161b"/></>,
   MKD:()=><><rect width="36" height="24" fill="#ce2028"/><line x1="0" y1="0" x2="36" y2="24" stroke="#f7e21c" strokeWidth="3"/><line x1="36" y1="0" x2="0" y2="24" stroke="#f7e21c" strokeWidth="3"/><line x1="18" y1="0" x2="18" y2="24" stroke="#f7e21c" strokeWidth="3"/><line x1="0" y1="12" x2="36" y2="12" stroke="#f7e21c" strokeWidth="3"/><circle cx="18" cy="12" r="4" fill="#f7e21c"/></>,
   PRK:()=><><rect width="36" height="24" fill="#024fa2"/><rect y="4" width="36" height="16" fill="#ce1126"/><rect y="3" width="36" height="2" fill="#fff"/><rect y="19" width="36" height="2" fill="#fff"/><circle cx="12" cy="12" r="5" fill="#fff"/><polygon points="12,7 13.2,10.6 17,10.6 14,12.8 15.2,16.4 12,14.2 8.8,16.4 10,12.8 7,10.6 10.8,10.6" fill="#ce1126"/></>,
+  HAI:()=><><rect width="36" height="12" fill="#00209f"/><rect y="12" width="36" height="12" fill="#d21034"/></>,
+  CUW:()=><><rect width="36" height="24" fill="#002b7f"/><rect y="16" width="36" height="4" fill="#f9e814"/><circle cx="8" cy="10" r="2" fill="#fff"/><circle cx="13" cy="7" r="1.5" fill="#fff"/></>,
+  NZL:()=><><rect width="36" height="24" fill="#00247d"/><rect width="14" height="7" fill="#012169"/><line x1="0" y1="0" x2="14" y2="7" stroke="#fff" strokeWidth="2.5"/><line x1="14" y1="0" x2="0" y2="7" stroke="#fff" strokeWidth="2.5"/><line x1="0" y1="0" x2="14" y2="7" stroke="#cf142b" strokeWidth="1.5"/><line x1="14" y1="0" x2="0" y2="7" stroke="#cf142b" strokeWidth="1.5"/><rect x="6" width="2" height="7" fill="#fff"/><rect y="3" width="14" height="2" fill="#fff"/><rect x="6.5" width="1" height="7" fill="#cf142b"/><rect y="3.5" width="14" height="1" fill="#cf142b"/><circle cx="26" cy="5" r="1.5" fill="#cf142b"/><circle cx="30" cy="9" r="1.5" fill="#cf142b"/><circle cx="27" cy="14" r="1.5" fill="#cf142b"/><circle cx="32" cy="6" r="1" fill="#cf142b"/></>,
   __default:()=><><rect width="36" height="24" fill="#262b35"/><rect x="15" width="6" height="24" fill="#30363f"/><rect y="9" width="36" height="6" fill="#30363f"/></>,
 };
 
