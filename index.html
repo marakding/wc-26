@@ -213,8 +213,9 @@ function teamCode(name) {
   const m={'France':'FRA','England':'ENG','Netherlands':'NED','Portugal':'POR','Brazil':'BRA','Argentina':'ARG','Germany':'GER','Spain':'ESP','Croatia':'CRO','Morocco':'MAR','Japan':'JPN','South Korea':'KOR','Mexico':'MEX','USA':'USA','Canada':'CAN','Italy':'ITA','Belgium':'BEL','Uruguay':'URU','Denmark':'DEN','Switzerland':'SUI','Poland':'POL','Serbia':'SRB','Ecuador':'ECU','Ghana':'GHA','Senegal':'SEN','Australia':'AUS','Wales':'WAL','Qatar':'QAT','Hungary':'HUN','Austria':'AUT','Norway':'NOR','Sweden':'SWE','Romania':'ROU','Slovakia':'SVK','Albania':'ALB','Georgia':'GEO','Finland':'FIN','Ireland':'IRL','Greece':'GRE','Slovenia':'SVN','Iceland':'ISL','Turkey':'TUR','Tunisia':'TUN','Saudi Arabia':'KSA','Iran':'IRN','South Africa':'RSA','Cameroon':'CMR','Czech Republic':'CZE','Bosnia & Herzegovina':'BIH','Paraguay':'PAR','Montenegro':'MNE',
   'Colombia':'COL','Venezuela':'VEN','Chile':'CHI','Panama':'PAN','Costa Rica':'CRC','Honduras':'HON','Jamaica':'JAM','Guatemala':'GUA',
   'Nigeria':'NGA','Egypt':'EGY','Ivory Coast':'CIV',"Côte d'Ivoire":'CIV','Mali':'MLI','DR Congo':'COD','Congo DR':'COD','Algeria':'ALG','Tanzania':'TZA','Zambia':'ZAM','Cape Verde':'CPV','Burkina Faso':'BFA','Uganda':'UGA',
-  'Ukraine':'UKR','Scotland':'SCO',
-  'Iraq':'IRQ','Jordan':'JOR','Indonesia':'IDN','Uzbekistan':'UZB','China':'CHN','Vietnam':'VIE','Oman':'OMA'};
+  'Ukraine':'UKR','Scotland':'SCO','North Macedonia':'MKD','Bosnia and Herzegovina':'BIH',
+  'Iraq':'IRQ','Jordan':'JOR','Indonesia':'IDN','Uzbekistan':'UZB','China':'CHN','Vietnam':'VIE','Oman':'OMA',
+  'United States':'USA','IR Iran':'IRN','Korea Republic':'KOR','Korea DPR':'PRK'};
   return m[name]||name.slice(0,3).toUpperCase();
 }
 function isLive(s){return['1H','2H','HT','ET','BT','P','LIVE'].includes(s);}
@@ -308,6 +309,8 @@ const FLAGS = {
   CHN:()=><><rect width="36" height="24" fill="#de2910"/><polygon points="6,3 7.2,6.6 11,6.6 8,8.8 9.2,12.4 6,10.2 2.8,12.4 4,8.8 1,6.6 4.8,6.6" fill="#ffde00"/></>,
   VIE:()=><><rect width="36" height="24" fill="#da251d"/><polygon points="18,6 19.8,11.4 25.5,11.4 21,14.6 22.8,20 18,16.8 13.2,20 15,14.6 10.5,11.4 16.2,11.4" fill="#ffff00"/></>,
   OMA:()=><><rect width="36" height="8" fill="#fff"/><rect y="8" width="36" height="8" fill="#db161b"/><rect y="16" width="36" height="8" fill="#008000"/><rect width="10" height="24" fill="#db161b"/></>,
+  MKD:()=><><rect width="36" height="24" fill="#ce2028"/><line x1="0" y1="0" x2="36" y2="24" stroke="#f7e21c" strokeWidth="3"/><line x1="36" y1="0" x2="0" y2="24" stroke="#f7e21c" strokeWidth="3"/><line x1="18" y1="0" x2="18" y2="24" stroke="#f7e21c" strokeWidth="3"/><line x1="0" y1="12" x2="36" y2="12" stroke="#f7e21c" strokeWidth="3"/><circle cx="18" cy="12" r="4" fill="#f7e21c"/></>,
+  PRK:()=><><rect width="36" height="24" fill="#024fa2"/><rect y="4" width="36" height="16" fill="#ce1126"/><rect y="3" width="36" height="2" fill="#fff"/><rect y="19" width="36" height="2" fill="#fff"/><circle cx="12" cy="12" r="5" fill="#fff"/><polygon points="12,7 13.2,10.6 17,10.6 14,12.8 15.2,16.4 12,14.2 8.8,16.4 10,12.8 7,10.6 10.8,10.6" fill="#ce1126"/></>,
   __default:()=><><rect width="36" height="24" fill="#262b35"/><rect x="15" width="6" height="24" fill="#30363f"/><rect y="9" width="36" height="6" fill="#30363f"/></>,
 };
 
