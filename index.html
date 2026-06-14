@@ -389,44 +389,61 @@ async function fetchCommentary(ctx,factType,phase) {
 
 function useCommentator(match,detail,liveMatch) {
   const [current,setCurrent]=useState(null);
-  const [shown,setShown]=useState(new Set());
+  const shown=useRef(new Set());
+  const queue=useRef([]);
   const timer=useRef(null);
   const idx=useRef(match?match.fixture.id%2:0);
   const elapsed=match?.fixture?.status?.elapsed||0;
+  const phase=liveMatch?'live':'prematch';
   const pick=()=>{const c=COMMENTATORS[idx.current%2];idx.current++;return c;};
-  const show=useCallback((facts)=>{
-    if(!facts.length)return;
-    const[first,...rest]=facts;
-    setCurrent(first);
-    timer.current=setTimeout(()=>{setCurrent(null);if(rest.length)setTimeout(()=>show(rest),1800);},12000);
+  const lineupNames=side=>{
+    const tid=side==='H'?match?.teams?.home?.id:match?.teams?.away?.id;
+    return (detail?.lineups?.find(l=>l.team.id===tid)?.startXI||[]).map(p=>p.player.name);
+  };
+  const baseCtx=()=>({homeTeam:match.teams.home.name,awayTeam:match.teams.away.name,venue:match.fixture.venue?.name||'the stadium',city:match.fixture.venue?.city||'',elapsed,score:`${match.goals.home??0}-${match.goals.away??0}`,homeLineup:lineupNames('H'),awayLineup:lineupNames('A')});
+  // Show cards one at a time; new facts append to the queue rather than interrupt.
+  const playNext=useCallback(()=>{
+    const next=queue.current.shift();
+    if(!next){setCurrent(null);return;}
+    setCurrent(next);
+    timer.current=setTimeout(()=>{setCurrent(null);timer.current=setTimeout(playNext,1500);},12000);
   },[]);
+  const enqueue=useCallback((facts)=>{
+    const clean=facts.filter(Boolean);
+    if(!clean.length)return;
+    queue.current.push(...clean);
+    if(!timer.current&&!current)playNext();
+  },[current,playNext]);
+  const run=(slot,ph,types,labels,extra)=>{
+    if(shown.current.has(slot)||!match)return;
+    shown.current.add(slot);
+    Promise.all(types.map(ft=>fetchCommentary({...baseCtx(),...extra},ft,ph)))
+      .then(texts=>enqueue(texts.map((text,i)=>text&&{text,commentator:pick(),label:labels[i]})));
+  };
+  // Opening / pre-match: stadium, head-to-head, a player spotlight.
   useEffect(()=>{
-    if(!liveMatch||!match||shown.has('opening'))return;
-    if(elapsed<1||elapsed>5)return;
-    setShown(s=>new Set([...s,'opening']));
-    const ctx={homeTeam:match.teams.home.name,awayTeam:match.teams.away.name,venue:match.fixture.venue?.name||'the stadium',city:match.fixture.venue?.city||'',elapsed,score:`${match.goals.home??0}-${match.goals.away??0}`};
+    if(!match)return;
     fetchH2H(match.teams.home.id,match.teams.away.id).then(h2h=>{
-      Promise.all(['stadium','h2h','player'].map(ft=>fetchCommentary({...ctx,h2h},ft,'opening'))).then(texts=>{
-        const labels=['STADIUM FACT','HEAD TO HEAD','PLAYER SPOTLIGHT'];
-        const facts=texts.filter(Boolean).map((text,i)=>{return{text,commentator:pick(),label:labels[i]}});
-        if(facts.length)show(facts);
-      });
+      run('open',phase,['stadium','h2h','player'],['STADIUM','HEAD TO HEAD','PLAYER SPOTLIGHT'],{h2h});
     });
-  },[elapsed,liveMatch]);
+  },[match?.fixture?.id]);
+  // Once lineups are in: "who plays where / who plays together" from the real XI.
   useEffect(()=>{
-    if(!liveMatch||!match||shown.has('halftime'))return;
-    if(elapsed<46||elapsed>52)return;
-    if(!detail?.stats)return;
-    setShown(s=>new Set([...s,'halftime']));
+    if(!match||!(detail?.lineups?.length))return;
+    run('squad',phase,['squad'],['WHO PLAYS WHERE'],{});
+  },[detail?.lineups]);
+  // Periodic in-play reads.
+  useEffect(()=>{
+    if(!liveMatch||!match)return;
+    [20,35,65,80].forEach(mark=>{if(elapsed>=mark&&elapsed<mark+6)run('live'+mark,'live',['tactical'],['LIVE READ'],{});});
+  },[elapsed,liveMatch]);
+  // Half-time stats analysis.
+  useEffect(()=>{
+    if(!liveMatch||!match||!detail?.stats||elapsed<45||elapsed>62)return;
     const gs=(side,type)=>{const tid=side==='H'?match.teams.home.id:match.teams.away.id;const ts=detail.stats.find(s=>s.team.id===tid)?.statistics||[];return ts.find(x=>x.type===type)?.value??'?';};
-    const ctx={homeTeam:match.teams.home.name,awayTeam:match.teams.away.name,score:`${match.goals.home??0}-${match.goals.away??0}`,stats:{homePossession:gs('H','Ball Possession'),awayPossession:gs('A','Ball Possession'),homeShots:gs('H','Total Shots'),awayShots:gs('A','Total Shots'),homeShotsOnTarget:gs('H','Shots on Goal'),awayShotsOnTarget:gs('A','Shots on Goal')}};
-    Promise.all(['possession','pattern'].map(ft=>fetchCommentary(ctx,ft,'halftime'))).then(texts=>{
-      const labels=['HALF TIME STATS','SECOND HALF PREVIEW'];
-      const facts=texts.filter(Boolean).map((text,i)=>{return{text,commentator:pick(),label:labels[i]}});
-      if(facts.length)show(facts);
-    });
+    run('half','halftime',['possession','pattern'],['HALF TIME STATS','SECOND HALF PREVIEW'],{stats:{homePossession:gs('H','Ball Possession'),awayPossession:gs('A','Ball Possession'),homeShots:gs('H','Total Shots'),awayShots:gs('A','Total Shots'),homeShotsOnTarget:gs('H','Shots on Goal'),awayShotsOnTarget:gs('A','Shots on Goal')}});
   },[elapsed,liveMatch,detail]);
-  const dismiss=useCallback(()=>{if(timer.current)clearTimeout(timer.current);setCurrent(null);},[]);
+  const dismiss=useCallback(()=>{if(timer.current){clearTimeout(timer.current);timer.current=null;}queue.current=[];setCurrent(null);},[]);
   useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
   return {current,dismiss};
 }
@@ -952,7 +969,6 @@ const POLLS=[
   {id:'p3',q:'Biggest surprise of the tournament?',opts:['African team in semis','Asian team in QF','Host nation wins','European dominance']},
   {id:'p4',q:'Best stadium?',opts:['MetLife NJ','SoFi LA','Azteca CDMX','AT&T Dallas']},
 ];
-const DEMO_PLAYERS=['Mbappe','Griezmann','Vinicius Jr','Rodrygo','Messi','Bellingham','Kane','Gavi','Pedri','Modric','Ronaldo','Salah'];
 
 function BattleScreen({matches,username}) {
   const [section,setSection]=useState('QUIZ');
@@ -963,8 +979,22 @@ function BattleScreen({matches,username}) {
   const [quizData,setQuizData]=useState({});
   const [allUsers,setAllUsers]=useState({});
   const [allPreds,setAllPreds]=useState({});
+  const [liveLineups,setLiveLineups]=useState({});
   const live=matches.filter(m=>isLive(m.fixture.status.short));
+  const liveIds=live.map(m=>m.fixture.id).join(',');
   const todayQ=DAILY_QUIZ[new Date().getDate()%DAILY_QUIZ.length];
+
+  // Pull real squads for live matches so "Call It" lists actual players, not demos.
+  useEffect(()=>{
+    live.forEach(m=>{
+      const fid=m.fixture.id;
+      if(liveLineups[fid])return;
+      apiGet(`fixtures/lineups?fixture=${fid}`).then(lu=>{
+        const players=(lu||[]).flatMap(t=>(t.startXI||[]).map(p=>({name:p.player.name,team:t.team.id})));
+        if(players.length)setLiveLineups(s=>({...s,[fid]:players}));
+      }).catch(()=>{});
+    });
+  },[liveIds]);
 
   useEffect(()=>{
     if(!username)return;
@@ -1097,15 +1127,20 @@ function BattleScreen({matches,username}) {
                 <div className="chunky" style={{fontSize:26,color:'var(--acc-grn)'}}>{called}</div>
                 <div className="mono" style={{fontSize:10,color:'var(--ink-3)',marginTop:6}}>FINGERS CROSSED ⚡</div>
               </HudCorners>
-              :<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
-                {DEMO_PLAYERS.map(p=>(
-                  <div key={p} onClick={()=>saveCallIt(username,m.fixture.id,p).then(()=>setCallIt(c=>({...c,[m.fixture.id]:p})))}
-                    style={{border:'1px solid var(--line-strong)',padding:'10px 12px',cursor:'pointer',background:'var(--bg-2)',display:'flex',alignItems:'center',gap:8}}>
-                    <span style={{fontFamily:'var(--f-mono)',fontSize:9,color:'var(--ink-3)'}}>⚽</span>
-                    <span style={{fontSize:13,fontWeight:500}}>{p}</span>
-                  </div>
-                ))}
-              </div>
+              :(()=>{
+                const squad=liveLineups[m.fixture.id];
+                if(!squad)return <div className="mono caps" style={{padding:'24px 0',textAlign:'center',fontSize:10,color:'var(--ink-3)',letterSpacing:'0.12em'}}>LOADING LINEUPS…</div>;
+                return <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+                  {squad.map(p=>{
+                    const code=p.team===m.teams.home.id?hC:aC;
+                    return <div key={p.name+p.team} onClick={()=>saveCallIt(username,m.fixture.id,p.name).then(()=>setCallIt(c=>({...c,[m.fixture.id]:p.name})))}
+                      style={{border:'1px solid var(--line-strong)',padding:'10px 12px',cursor:'pointer',background:'var(--bg-2)',display:'flex',alignItems:'center',gap:8}}>
+                      <span style={{fontFamily:'var(--f-mono)',fontSize:9,color:'var(--ink-3)',width:26,flexShrink:0}}>{code}</span>
+                      <span style={{fontSize:13,fontWeight:500}}>{p.name}</span>
+                    </div>;
+                  })}
+                </div>;
+              })()
             }
           </div>;
         })

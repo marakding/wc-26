@@ -40,12 +40,13 @@ export default {
         const body = await request.json();
         const { matchContext, factType, phase } = body;
 
-        const systemPrompt = `You are a sharp, knowledgeable football commentator giving a single punchy fact during a World Cup match. 
-You speak in short, confident sentences like a real TV analyst. Max 2-3 sentences. 
-Never use filler phrases like "Great question" or "Certainly". 
-Be specific — use real numbers, records, and stats when you have them.
-For phase "opening" give background facts (stadium, h2h, player spotlight).
-For phase "halftime" analyze the first half stats you've been given.`;
+        const systemPrompt = `You are a witty, deeply knowledgeable football pundit dropping one bite-sized nugget during a World Cup 2026 match — think the tone of 11Freunde or a clever matchday liveticker: dry humour, sharp insight, never cheesy.
+Rules:
+- Max 2 sentences, ~35 words. Punchy, specific, conversational.
+- Lead with the interesting bit. No preamble, no "Great question", no "Certainly", no emojis.
+- Use concrete facts: which club a player plays for, team-mates who share a club, current form, records, tournament history, stadium/city colour.
+- Only use player/club facts you are confident are accurate. If unsure of a specific, stay general rather than inventing a stat or transfer.
+- Prefer the players named in the provided lineups when you have them.`;
 
         const userPrompt = buildPrompt(matchContext, factType, phase);
 
@@ -58,7 +59,7 @@ For phase "halftime" analyze the first half stats you've been given.`;
           },
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 120,
+            max_tokens: 160,
             system: systemPrompt,
             messages: [{ role: 'user', content: userPrompt }],
           }),
@@ -144,47 +145,44 @@ function hasApiError(text) {
 
 // ── Prompt builder ─────────────────────────────────────────────────────────
 function buildPrompt(ctx, factType, phase) {
-  const { homeTeam, awayTeam, venue, city, elapsed, score, h2h, topPlayers, stats } = ctx;
+  const { homeTeam, awayTeam, venue, city, elapsed, score, h2h, stats, homeLineup, awayLineup } = ctx;
+  const xi = (arr) => Array.isArray(arr) && arr.length ? arr.join(', ') : null;
+  const homeXI = xi(homeLineup), awayXI = xi(awayLineup);
+  const when = phase === 'prematch' ? 'about to kick off' : `live, ${elapsed}' played, score ${score}`;
 
+  if (factType === 'stadium') {
+    return `${homeTeam} vs ${awayTeam} at the 2026 World Cup, played at ${venue} in ${city} (${when}).
+Drop one sharp, surprising nugget about this stadium or host city.`;
+  }
+  if (factType === 'h2h') {
+    const record = h2h
+      ? `Their all-time head-to-head: ${h2h.home_wins ?? '?'} ${homeTeam} wins, ${h2h.draws ?? '?'} draws, ${h2h.away_wins ?? '?'} ${awayTeam} wins.`
+      : `They have history.`;
+    return `${homeTeam} vs ${awayTeam} (${when}). ${record}
+One witty line on the rivalry or a memorable past meeting.`;
+  }
+  if (factType === 'player') {
+    return `${homeTeam} vs ${awayTeam} (${when}).${homeXI ? ` ${homeTeam} XI: ${homeXI}.` : ''}${awayXI ? ` ${awayTeam} XI: ${awayXI}.` : ''}
+Spotlight ONE standout player on the pitch (prefer one named above). Say which club he plays for and why he's dangerous.`;
+  }
+  if (factType === 'squad') {
+    return `${homeTeam} vs ${awayTeam} (${when}).${homeXI ? ` ${homeTeam} XI: ${homeXI}.` : ''}${awayXI ? ` ${awayTeam} XI: ${awayXI}.` : ''}
+Give a "who plays where" nugget: point out a couple of these players' clubs, or two team-mates here who actually play together at the same club (or notably against each other).`;
+  }
+  if (factType === 'tactical') {
+    return `${homeTeam} vs ${awayTeam}, ${when}.
+One concise in-play read on how the game looks right now — momentum, a key man, or what each side needs.`;
+  }
   if (phase === 'halftime') {
-    const homePoss = stats?.homePossession || '?';
-    const awayPoss = stats?.awayPossession || '?';
-    const homeShots = stats?.homeShots || '?';
-    const awayShots = stats?.awayShots || '?';
-    const homeShotsOT = stats?.homeShotsOnTarget || '?';
-    const awayShotsOT = stats?.awayShotsOnTarget || '?';
-
+    const g = (k) => stats?.[k] ?? '?';
     if (factType === 'possession') {
-      return `${homeTeam} vs ${awayTeam}, HT score: ${score}. 
-First half stats: ${homeTeam} possession ${homePoss}, ${awayTeam} possession ${awayPoss}.
-${homeTeam} shots: ${homeShots} (${homeShotsOT} on target). ${awayTeam} shots: ${awayShots} (${awayShotsOT} on target).
-Give a sharp analyst comment on what these first half stats tell us. 2-3 sentences max.`;
+      return `${homeTeam} vs ${awayTeam}, half-time ${score}. Possession ${g('homePossession')} vs ${g('awayPossession')}; shots ${g('homeShots')} (${g('homeShotsOnTarget')} OT) vs ${g('awayShots')} (${g('awayShotsOnTarget')} OT).
+One sharp read on what the first-half numbers actually tell us.`;
     }
     if (factType === 'pattern') {
-      return `${homeTeam} vs ${awayTeam}, HT score: ${score}.
-Shots: ${homeTeam} ${homeShots}, ${awayTeam} ${awayShots}. Possession: ${homeTeam} ${homePoss}, ${awayTeam} ${awayPoss}.
-Give a tactical observation about what to expect in the second half based on these patterns. 2-3 sentences max.`;
+      return `${homeTeam} vs ${awayTeam}, half-time ${score}. Shots ${g('homeShots')} vs ${g('awayShots')}, possession ${g('homePossession')} vs ${g('awayPossession')}.
+One line on what to expect in the second half.`;
     }
   }
-
-  if (phase === 'opening') {
-    if (factType === 'stadium') {
-      return `The match ${homeTeam} vs ${awayTeam} is being played at ${venue} in ${city} at the 2026 World Cup.
-Give one sharp, interesting fact about this stadium or city hosting a World Cup match. 2 sentences max. Be specific.`;
-    }
-    if (factType === 'h2h') {
-      const record = h2h
-        ? `All-time record: ${h2h.home_wins || '?'} wins for ${homeTeam}, ${h2h.draws || '?'} draws, ${h2h.away_wins || '?'} wins for ${awayTeam}.`
-        : `These teams have met several times before.`;
-      return `${homeTeam} vs ${awayTeam} at the 2026 World Cup. ${record}
-Give one sharp fact about the historical rivalry or recent meetings between these teams. 2 sentences max.`;
-    }
-    if (factType === 'player') {
-      const player = topPlayers?.[0] || 'a key player';
-      return `${homeTeam} vs ${awayTeam}. A key player to watch is ${player}.
-Give one sharp fact about this player — their form, tournament stats, or what makes them dangerous. 2 sentences max.`;
-    }
-  }
-
-  return `Give one interesting football fact about ${homeTeam} vs ${awayTeam} at the 2026 World Cup. 2 sentences max.`;
+  return `One interesting, witty nugget about ${homeTeam} vs ${awayTeam} at the 2026 World Cup.`;
 }
